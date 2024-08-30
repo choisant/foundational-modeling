@@ -1,0 +1,33 @@
+Buildmetadata:
+- Does not create folder through "file" argument.
+- Assumes variate can only be positive when it is not, unsure if this is wise
+- Should we ask users to check if ordinal variates are actually categorical?
+- Documentation is not clear on nominal variates
+- Buildmetadata thought I had an ordinal variate instead of nominal so it dit not create the nominal columns, very confusing to edit manually
+- If I know the approximate bounds of a variate, should I use those?
+- In the documentation it looks like I should put NA in fields
+
+
+learn:
+- Add a check that the metadata has an appropriate shape
+Do I have to assign learn to a variable?
+Error in { : .
+  task 1 failed - "Dimension of 'Nprob[v, k, 1:1]' does not match required dimension for the distribution 'ddirch'. Necessary dimension is 1."
+Likely cause: c,nominal,1,2,3,4
+
+Error in seq.default(plotmin, plotmax, length.out = 256) : 
+  'from' must be a finite number
+Calls: learn ... with.default -> eval -> eval -> cbind -> seq -> seq.default
+In addition: Warning message:
+In seq.default(plotmin, plotmax, length.out = 256) :
+  NAs introduced by coercion
+metadata:
+    x1,continuous,-pi,pi,,FALSE,FALSE
+    x2,continuous,-pi,pi,,FALSE,FALSE
+    a1_noise,continuous,-Inf,Inf,,FALSE,FALSE
+    a2_noise,continuous,-Inf,Inf,,FALSE,FALSE
+
+Plotting final Monte Carlo traces and marginal samples...
+Error in `colnames<-`(`*tmp*`, value = "c") : 
+  attempt to set 'colnames' on an object with less than two dimensions
+Calls: learn ... plotFsamples -> with -> with.default -> eval -> eval -> colnames<-
