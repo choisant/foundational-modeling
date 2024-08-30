@@ -1,19 +1,17 @@
 library("inferno")
 set.seed(120)
-inferno_dir <- "inferno"
+inferno_dir <- "inferno/run"
 if(!dir.exists(inferno_dir)) {dir.create((inferno_dir))}
-caldata <- "data/train.csv"
+caldata <- "data/cal.csv"
+testdata <- "data/test.csv"
 #buildmetadata(caldata, file = "inferno/temp_metadata")
-metadata <- "inferno/metadata.csv"
+metadata <- "inferno/debug_metadata.csv"
 
 NSAMPLES <- 32
-NCHAINS <- 4
-NTRAIN <- 50
-NCORES <- 4
+NCHAINS <- 1
+NTRAIN <- 10
+NCORES <- 1
 
-#Sample train data
-alldata <- data.table::fread(caldata)
-trainpoints <- sort(sample(seq_len(nrow(alldata)), NTRAIN))
 
 # Start inference
 learnt <- learn(
@@ -25,10 +23,4 @@ learnt <- learn(
     parallel = NCORES,
     appendtimestamp = FALSE,
     appendinfo = FALSE
-)
-
-probability <- Pr(
-    Y = data.frame(diff.MDS.UPRS.III = 0),
-    X = data.frame(Sex = 'Female', TreatmentGroup = 'NR'),
-    learnt = learnt
 )

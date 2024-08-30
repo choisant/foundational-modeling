@@ -6,7 +6,7 @@ Buildmetadata:
 - Buildmetadata thought I had an ordinal variate instead of nominal so it dit not create the nominal columns, very confusing to edit manually
 - If I know the approximate bounds of a variate, should I use those?
 - In the documentation it looks like I should put NA in fields
-
+- Need an empty line to end csv file
 
 learn:
 - Add a check that the metadata has an appropriate shape
