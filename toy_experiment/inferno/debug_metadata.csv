@@ -1,5 +1,0 @@
-name,type,domainmin,domainmax,datastep,minincluded,maxincluded,V1,V2,V3,V4
-x1,continuous,-3.15,3.15,,FALSE,FALSE,,,,
-x2,continuous,-3.15,3.15,,FALSE,FALSE,,,,
-a1_noise,continuous,-Inf,Inf,,FALSE,FALSE,,,,
-a2_noise,continuous,-Inf,Inf,,FALSE,FALSE,,,,

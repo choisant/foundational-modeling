@@ -1,4 +1,4 @@
-Log core 1 - Current time: 2024-08-30 15:18:42
+Log core 1 - Current time: 2024-08-31 09:11:32
 Defining model
 Building model
 Setting data and initial values
@@ -9,64 +9,64 @@ Compiling
   [Note] This may take a minute.
   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
 ===== Monitors =====
-thin = 1: Nprob, Rmean, Rvar, W
+thin = 1: Bprob, Rmean, Rvar, W
 thin2 = 1: K
 ===== Samplers =====
-conjugate sampler (833)
-  - Rmean[]  (256 elements)
-  - Rrate[]  (256 elements)
-  - Rvar[]  (256 elements)
-  - Nprob[]  (64 multivariate elements)
+conjugate sampler (449)
+  - Rmean[]  (128 elements)
+  - Rrate[]  (128 elements)
+  - Bprob[]  (64 elements)
+  - Rvar[]  (128 elements)
   - W[1:64] 
 categorical sampler (201)
   - Alpha
   - K[]  (200 elements)
 ===== Monitors =====
-thin = 1: Nprob, Rmean, Rvar, W
+thin = 1: Bprob, Rmean, Rvar, W
 thin2 = 1: K
 ===== Samplers =====
 slice sampler (201)
   - Alpha
   - K[]  (200 elements)
-conjugate sampler (833)
-  - Rmean[]  (256 elements)
-  - Rrate[]  (256 elements)
-  - Rvar[]  (256 elements)
-  - Nprob[]  (64 multivariate elements)
+conjugate sampler (449)
+  - Rmean[]  (128 elements)
+  - Rrate[]  (128 elements)
+  - Bprob[]  (64 elements)
+  - Rvar[]  (128 elements)
   - W[1:64] 
 Compiling
   [Note] This may take a minute.
   [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
 
-Setup time 32 secs 
+Setup time 19 secs 
 
 Chain # 1 (chain 1 of 1 for this core)
 
 Datapoints for testing convergence:
- #11 #34 #36 #44 #79 #177 
+ #23 #34 #36 #47 
 
 Iterations: 3600 
 |-------------|-------------|-------------|-------------|
 |-------------------------------------------------------|
 
-Current time: 2024-08-30 15:19:50
-MCMC time 36 secs 
+Current time: 2024-08-31 09:12:04
+MCMC time 13 secs 
 
-USED COMPONENTS: 31 OF 64 
+USED COMPONENTS: 24 OF 64 
 
-rel. MC standard error: 0.0162 to 0.0325
-eff. sample size: 950 to 3810
-needed thinning: 2 to 6
-Diagnostics time 0.28 secs 
+rel. MC standard error: 0.0177 to 0.0364
+eff. sample size: 755 to 3190
+needed thinning: 2 to 8
+Diagnostics time 0.34 secs 
 
 Total number of iterations 3600 - required further 0 
 
-Keeping last 32 samples with thinning 6 
+Keeping last 32 samples with thinning 8 
 
 Plotting traces and samples.
 
-Current time: 2024-08-30 15:19:52
-MCMC + diagnostics time 38 secs 
+Current time: 2024-08-31 09:12:05
+MCMC + diagnostics time 13 secs 
 
-Current time: 2024-08-30 15:19:52
-Total time 38 secs 
+Current time: 2024-08-31 09:12:05
+Total time 13 secs 

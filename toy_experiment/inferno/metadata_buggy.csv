@@ -1,0 +1,6 @@
+name,type,domainmin,domainmax,datastep,minincluded,maxincluded
+x1,continuous,-pi,pi,,FALSE,FALSE
+x2,continuous,-pi,pi,,FALSE,FALSE
+c,nominal,1,4,1,,
+a1_noise,continuous,-Inf,Inf,,FALSE,FALSE
+a2_noise,continuous,-Inf,Inf,,FALSE,FALSE

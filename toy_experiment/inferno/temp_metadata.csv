@@ -1,8 +1,7 @@
-name,type,domainmin,domainmax,datastep,minincluded,maxincluded
-x1,continuous,-Inf,Inf,,FALSE,FALSE
-x2,continuous,0,Inf,,FALSE,FALSE
-c,ordinal,1,4,1,,
-a1,continuous,-Inf,Inf,,FALSE,FALSE
-a2,continuous,-Inf,Inf,,FALSE,FALSE
-a1_noise,continuous,-Inf,Inf,,FALSE,FALSE
-a2_noise,continuous,-Inf,Inf,,FALSE,FALSE
+name,type,domainmin,domainmax,datastep,minincluded,maxincluded,V1,V2
+c,nominal,,,,,,green,red
+x1,continuous,-Inf,Inf,,FALSE,FALSE,,
+x2,continuous,-Inf,Inf,,FALSE,FALSE,,
+a1,continuous,0,Inf,,FALSE,FALSE,,
+a2,continuous,0,Inf,,FALSE,FALSE,,
+r1,continuous,0,Inf,,FALSE,FALSE,,
