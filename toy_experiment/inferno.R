@@ -2,12 +2,12 @@ library("inferno")
 set.seed(120)
 inferno_dir <- "inferno/run"
 if(!dir.exists(inferno_dir)) {dir.create((inferno_dir))}
-caldata <- "data/cal.csv"
-buildmetadata(caldata, file = "inferno/temp_metadata")
-stop()
-#metadata <- "inferno/metadata.csv"
+caldata <- "data/train.csv"
+#buildmetadata(caldata, file = "inferno/temp_metadata")
 
-NSAMPLES <- 3200
+metadata <- "inferno/metadata.csv"
+
+NSAMPLES <- 320
 NCHAINS <- 12
 NCORES <- 12
 

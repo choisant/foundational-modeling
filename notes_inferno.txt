@@ -31,3 +31,8 @@ Plotting final Monte Carlo traces and marginal samples...
 Error in `colnames<-`(`*tmp*`, value = "c") : 
   attempt to set 'colnames' on an object with less than two dimensions
 Calls: learn ... plotFsamples -> with -> with.default -> eval -> eval -> colnames<-
+
+- stop("unknown Y variates\n") -> should list the available variates
+
+Plotting
+- so hard to do :(
