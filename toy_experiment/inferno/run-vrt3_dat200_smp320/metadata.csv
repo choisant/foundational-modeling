@@ -1,5 +1,4 @@
 name,type,domainmin,domainmax,datastep,minincluded,maxincluded,V1,V2
-color,nominal,,,,,,green,red
+c,nominal,,,,,,green,red
 x1,continuous,-Inf,Inf,,FALSE,FALSE,,
 x2,continuous,-Inf,Inf,,FALSE,FALSE,,
-
