@@ -16,7 +16,7 @@ class Robot:
         # Constants
         R2 = 2
         k_red = 5
-        k_green = 2
+        k_green = 3
         scale = 2
         # Check arguments
         try: n = abs(int(n))
