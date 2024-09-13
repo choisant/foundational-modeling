@@ -1,3 +1,4 @@
 _*
 log*
 *.rds
+__pycache__/
