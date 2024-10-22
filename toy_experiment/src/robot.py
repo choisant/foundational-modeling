@@ -30,9 +30,9 @@ class Robot:
 
         # Probability distributions
         def sample_c(n: int): return(rng.choice(["red", "green"], n))
-        def sample_a1(c: list[str], n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
-        def sample_a2(c: list[str], n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
-        def sample_r1(c: list[str], n: int):
+        def sample_a1(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
+        def sample_a2(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
+        def sample_r1(c: "list[str]", n: int):
             # c dependent
             r1_arr = np.zeros(n)
             r1_arr = np.where(c=="red", 2*R2 + rng.gamma(k_red, scale, n), r1_arr)
@@ -84,11 +84,11 @@ class Robot:
         except Exception:
             print("Please set n to a positive integer.")
             return None
-        # Get data from R_1 = mean and mean + srt(var)
+        # Get data from R_1 = mean and mean +- sqrt(var)
         def r1_values(k, scale):
             mean = 2*R2 + k*scale
             var_sq = np.sqrt(k*scale**2) # square root of the variance
-            return(np.array([mean, mean+var_sq, mean+var_sq*2]))
+            return(np.array([mean, mean+var_sq, mean-var_sq]))
         
         df_keys = ["color", "x1", "x2", "a1", "a2", "r1", "r2"]
         no_df = True
