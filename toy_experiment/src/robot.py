@@ -9,15 +9,28 @@ def robot_arm(theta1, theta2, r1, r2):
 
 class Robot:
     """The robot class"""
-    def __init__(self, seed: int = 24,):
+    def __init__(self, 
+                 seed: int = 24,
+                 R2: int = 3,
+                 k_red: int = 7,
+                 k_green: int = 3,
+                 scale: int = 1):
+        
         self.seed = seed
+        self.R2 = R2
+        self.k_red = k_red
+        self.k_green = k_green
+        self.scale = scale
+
+    def get_parameters(self):
+        return {"seed": self.seed, "R2": self.R2, "k_red": self.k_red, "k_green": self.k_green, "scale": self.scale}
 
     def simulate(self, n: int = 100, mode: str = "mixed", black_box: bool = True):
         # Constants
-        R2 = 2
-        k_red = 5
-        k_green = 3
-        scale = 2
+        R2 = self.R2
+        k_red = self.k_red
+        k_green = self.k_green
+        scale = self.scale
         # Check arguments
         try: n = abs(int(n))
         except Exception:
@@ -30,8 +43,19 @@ class Robot:
 
         # Probability distributions
         def sample_c(n: int): return(rng.choice(["red", "green"], n))
-        def sample_a1(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
-        def sample_a2(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
+        #def sample_a1(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
+        def sample_a1(c: "list[str]", n: int):
+            r1_arr = np.zeros(n)
+            # Different probabilities for different colors
+            # Choose low or high probability section
+            section = rng.choice(["High", "Low"], size = n, p = [0.7, 0.3])
+            r1_arr = np.where((section=="High") & (c=="red"), rng.uniform(0, np.pi*(4/3), n), r1_arr)
+            r1_arr = np.where((section=="Low") & (c=="red"), rng.uniform(np.pi*(4/3), 2*np.pi, n), r1_arr)
+            r1_arr = np.where((section=="High") & (c=="green"), rng.uniform(np.pi, 2*np.pi, n), r1_arr)
+            r1_arr = np.where((section=="Low") & (c=="green"), rng.uniform(0, np.pi, n), r1_arr)
+            return r1_arr
+
+        def sample_a2(c: "list[str]", n: int): return(np.array([random.uniform(0, np.pi) for i in range(n)]))
         def sample_r1(c: "list[str]", n: int):
             # c dependent
             r1_arr = np.zeros(n)
@@ -75,10 +99,10 @@ class Robot:
         # This data is just for visual inspection purposes
         # The data is not random
         # Constants
-        R2 = 2
-        k_red = 5
-        k_green = 2
-        scale = 2
+        R2 = self.R2
+        k_red = self.k_red
+        k_green = self.k_green
+        scale = self.scale
         # Check arguments
         try: n = abs(int(n))
         except Exception:
@@ -88,7 +112,7 @@ class Robot:
         def r1_values(k, scale):
             mean = 2*R2 + k*scale
             var_sq = np.sqrt(k*scale**2) # square root of the variance
-            return(np.array([mean, mean+var_sq, mean-var_sq]))
+            return(np.array([mean, mean+var_sq, mean-var_sq, mean+2*var_sq]))
         
         df_keys = ["color", "x1", "x2", "a1", "a2", "r1", "r2"]
         no_df = True
