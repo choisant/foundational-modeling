@@ -14,16 +14,19 @@ class Robot:
                  R2: int = 3,
                  k_red: int = 7,
                  k_green: int = 3,
-                 scale: int = 1):
+                 scale: int = 1,
+                 vary_a1: bool = False):
         
         self.seed = seed
         self.R2 = R2
         self.k_red = k_red
         self.k_green = k_green
         self.scale = scale
+        self.vary_a1 = vary_a1
 
     def get_parameters(self):
-        return {"seed": self.seed, "R2": self.R2, "k_red": self.k_red, "k_green": self.k_green, "scale": self.scale}
+        return {"seed": self.seed, "R2": self.R2, "k_red": self.k_red, 
+                "k_green": self.k_green, "scale": self.scale, "vary_a1": self.vary_a1}
 
     def simulate(self, n: int = 100, mode: str = "mixed", black_box: bool = True):
         # Constants
@@ -31,6 +34,7 @@ class Robot:
         k_red = self.k_red
         k_green = self.k_green
         scale = self.scale
+        vary_a1 = self.vary_a1
         # Check arguments
         try: n = abs(int(n))
         except Exception:
@@ -44,18 +48,20 @@ class Robot:
         # Probability distributions
         def sample_c(n: int): return(rng.choice(["red", "green"], n))
         #def sample_a1(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
-        def sample_a1(c: "list[str]", n: int):
-            r1_arr = np.zeros(n)
-            # Different probabilities for different colors
-            # Choose low or high probability section
-            section = rng.choice(["High", "Low"], size = n, p = [0.7, 0.3])
-            r1_arr = np.where((section=="High") & (c=="red"), rng.uniform(0, np.pi*(4/3), n), r1_arr)
-            r1_arr = np.where((section=="Low") & (c=="red"), rng.uniform(np.pi*(4/3), 2*np.pi, n), r1_arr)
-            r1_arr = np.where((section=="High") & (c=="green"), rng.uniform(np.pi, 2*np.pi, n), r1_arr)
-            r1_arr = np.where((section=="Low") & (c=="green"), rng.uniform(0, np.pi, n), r1_arr)
-            return r1_arr
+        def sample_a1(c: "list[str]", n: int, vary_a1: bool):
+            if vary_a1:
+                r1_arr = np.zeros(n)
+                # Different probabilities for different colors
+                # Choose low or high probability section
+                section = rng.choice(["High", "Low"], size = n, p = [0.7, 0.3])
+                r1_arr = np.where((section=="High") & (c=="red"), rng.uniform(0, np.pi*(4/3), n), r1_arr)
+                r1_arr = np.where((section=="Low") & (c=="red"), rng.uniform(np.pi*(4/3), 2*np.pi, n), r1_arr)
+                r1_arr = np.where((section=="High") & (c=="green"), rng.uniform(np.pi, 2*np.pi, n), r1_arr)
+                r1_arr = np.where((section=="Low") & (c=="green"), rng.uniform(0, np.pi, n), r1_arr)
+                return r1_arr
+            else: return(np.array([rng.uniform(0, 2*np.pi) for i in range(n)]))
 
-        def sample_a2(c: "list[str]", n: int): return(np.array([random.uniform(0, np.pi) for i in range(n)]))
+        def sample_a2(c: "list[str]", n: int): return(np.array([rng.uniform(0, np.pi) for i in range(n)]))
         def sample_r1(c: "list[str]", n: int):
             # c dependent
             r1_arr = np.zeros(n)
@@ -76,7 +82,7 @@ class Robot:
                 df["color"] = ["green"]*n
             
             # Sample dependent variates
-            df["a1"] = sample_a1(df["color"], n)
+            df["a1"] = sample_a1(df["color"], n, vary_a1)
             df["a2"] = sample_a2(df["color"], n)
             df["r1"] = sample_r1(df["color"], n)
             df["r2"] = R2
