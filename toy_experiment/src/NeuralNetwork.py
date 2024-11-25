@@ -13,7 +13,7 @@ class NeuralNetwork(nn.Module):
 
         self.flatten = nn.Flatten()
         self.first_layer = nn.Linear(in_channels, L)
-        self.hidden_layer = nn.Linear(L, self.L)
+        self.hidden_layer = nn.Linear(L, L)
         self.last_layer = nn.Linear(L, out_channels)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
