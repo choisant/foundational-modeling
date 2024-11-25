@@ -1787,4 +1787,40 @@ Chain # 20 - chunk 13 (chain 4 of 4 for this core): increasing by 420
 
 Iterations: 420 
 |-------------|-------------|-------------|-------------|
-|-----------------------------------------------------
+|-------------------------------------------------------|
+
+Current time: 2024-11-25 11:04:18
+MCMC time 42 mins 
+
+USED COMPONENTS: 38 OF 74 
+
+rel. MC standard error: 0.0112 to 0.0699
+eff. sample size: 205 to 8000
+needed thinning: 2 to 55
+Diagnostics time 0.18 secs 
+
+Total number of iterations 7500 - required further 427 
+
+Chain # 20 - chunk 14 (chain 4 of 4 for this core): increasing by 428 
+
+Iterations: 428 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-25 11:04:32
+MCMC time 42 mins 
+
+USED COMPONENTS: 38 OF 74 
+
+rel. MC standard error: 0.0116 to 0.0694
+eff. sample size: 208 to 7400
+needed thinning: 2 to 58
+Diagnostics time 0.19 secs 
+
+Total number of iterations 7928 - required further 450 
+
+Chain # 20 - chunk 15 (chain 4 of 4 for this core): increasing by 451 
+
+Iterations: 451 
+|-------------|-------------|-------------|-------------|
+|

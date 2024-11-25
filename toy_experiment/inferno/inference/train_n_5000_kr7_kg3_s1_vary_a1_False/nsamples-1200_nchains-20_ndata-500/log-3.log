@@ -1165,4 +1165,22 @@ Chain # 11 - chunk 28 (chain 3 of 4 for this core): increasing by 575
 
 Iterations: 575 
 |-------------|-------------|-------------|-------------|
-|-----------------------------------------------
+|-------------------------------------------------------|
+
+Current time: 2024-11-25 11:04:23
+MCMC time 42 mins 
+
+USED COMPONENTS: 46 OF 74 
+
+rel. MC standard error: 0.00819 to 0.0568
+eff. sample size: 310 to 14900
+needed thinning: 2 to 76
+Diagnostics time 0.4 secs 
+
+Total number of iterations 15554 - required further 589 
+
+Chain # 11 - chunk 29 (chain 3 of 4 for this core): increasing by 590 
+
+Iterations: 590 
+|-------------|-------------|-------------|-------------|
+|--------------
