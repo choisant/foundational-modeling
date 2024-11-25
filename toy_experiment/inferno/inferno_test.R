@@ -34,15 +34,9 @@ opt <- args$options
 
 # Read inputs
 ntrain <- opt$trainpoints 
-ntest <- 500
 nsamples <- opt$samples
 nchains <- opt$chains
 ncores <- opt$cores
-
-#ncheckpoints <- Inf # Use all datapoints to check for convergence
-if (ntrain > 16) {
-	ncheckpoints <- ntrain %/% 4 # Use 25 % of training data for checkpoints
-} else {ncheckpoints <- Inf}
 
 
 # Read Input arguments
@@ -52,11 +46,13 @@ testdatafile <- args$args[3]
 
 #Test file
 test_df <- read.csv(testdatafile)
-test_df <- test_df[1:ntest, ]
+#test_df <- test_df[1:ntest, ]
 
 # Analysis folder
-inferno_dir <- paste0("analysis/", sub('.csv$', '', basename(traindatafile)), 
-                        "-nsamples_", nsamples, "_ndata_", ntrain)
+
+parent_dir <- dirname(metadatafile)
+inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)
 
 ##########################################
 # RUN TEST
@@ -103,8 +99,9 @@ h5createDataset(h5file, 'probabilities', dims = c(nlabels, ntest))
 h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
 h5createDataset(h5file, 'samples', dims = c(nlabels, nsamples_save, ntest))
 h5createDataset(h5file, 'data', dims = c(nlabels, ntest))
-h5createDataset(h5file, 'truth', dims = c(ntest))
-
+if ("color" %in% names(test_df)){
+        h5createDataset(h5file, 'truth', dims = c(ntest))
+}
 # Write to file
 cat('Writing to file \n')
 h5write(Pr_output$values, file = h5file, name = 'probabilities',
@@ -115,6 +112,12 @@ h5write(condfreqs, file = h5file, name = 'samples',
         index = list(NULL, NULL, NULL))
 h5write(t(test_df[c("x1", "x2")]),
         file = h5file, name = 'data', index = list(NULL, NULL))
-h5write(t(test_df["color"]), file = h5file, name = 'truth',
-        index = list(NULL))
+if ("color" %in% names(test_df)) {
+        h5write(t(test_df["color"]), file = h5file, name = 'truth',
+                index = list(NULL))
+}
 
+#For testing, let's plot the first test point to see that we can reproduce it in python
+
+#pdf(paste0(inferno_dir, "/test_plot.pdf"))
+#plot(sapply(Pr_output,'[[',1))

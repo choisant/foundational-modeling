@@ -1,0 +1,76 @@
+Log core 11 - Current time: 2024-11-20 10:55:25
+Defining model
+Building model
+Setting data and initial values
+Running calculate on model
+  [Note] Any error reports that follow may simply reflect missing values in model variables.
+Checking model sizes and dimensions
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+categorical sampler (2401)
+  - Alpha
+  - K[]  (2400 elements)
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+slice sampler (2401)
+  - Alpha
+  - K[]  (2400 elements)
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+
+Setup time 5.5 mins 
+
+Chain # 11 (chain 1 of 1 for this core)
+
+Datapoints for testing convergence:
+ #41 #54 #108 #218 #326 #337 #508 #628 #787 #958 #1024 #1198 #1226 #1240 #1348 #1896 #1927 #2180 #2215 #2301 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 11:12:33
+MCMC time 12 mins 
+
+USED COMPONENTS: 64 OF 74 
+
+rel. MC standard error: 0.0159 to 0.0486
+eff. sample size: 424 to 3970
+needed thinning: 2 to 13
+Diagnostics time 2.3 secs 
+
+Total number of iterations 3600 - required further 0 
+
+Keeping last 60 samples with thinning 13 
+
+Plotting traces and samples.
+
+Current time: 2024-11-20 11:12:37
+MCMC + diagnostics time 12 mins 
+
+Current time: 2024-11-20 11:12:37
+Total time 12 mins 
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment

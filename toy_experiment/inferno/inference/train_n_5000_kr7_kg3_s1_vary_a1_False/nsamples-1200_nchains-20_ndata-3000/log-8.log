@@ -1,0 +1,81 @@
+Log core 8 - Current time: 2024-11-20 18:29:52
+Defining model
+Building model
+Setting data and initial values
+Running calculate on model
+  [Note] Any error reports that follow may simply reflect missing values in model variables.
+Checking model sizes and dimensions
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+categorical sampler (3001)
+  - Alpha
+  - K[]  (3000 elements)
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+slice sampler (3001)
+  - Alpha
+  - K[]  (3000 elements)
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+
+Setup time 12 mins 
+
+Chain # 8 (chain 1 of 1 for this core)
+
+Datapoints for testing convergence:
+ #11 #18 #209 #212 #252 #672 #1154 #1202 #1245 #1315 #1320 #1530 #1550 #1669 #1679 #1847 #2059 #2494 #2526 #2656 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 18:56:37
+MCMC time 15 mins 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.0142 to 0.0372
+eff. sample size: 722 to 4950
+needed thinning: 2 to 8
+Diagnostics time 2.2 secs 
+
+Total number of iterations 3600 - required further 0 
+
+Keeping last 60 samples with thinning 8 
+
+Plotting traces and samples.
+
+Current time: 2024-11-20 18:56:40
+MCMC + diagnostics time 15 mins 
+
+Current time: 2024-11-20 18:56:40
+Total time 15 mins 
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+Error in gzfile(file, "rb") : cannot open the connection
+Calls: <Anonymous> -> cleanup -> loadNamespace -> readRDS -> gzfile
+In addition: Warning message:
+In gzfile(file, "rb") :
+  cannot open compressed file '/usr/lib/R/library/tools/Meta/nsInfo.rds', probable reason 'Transport endpoint is not connected'

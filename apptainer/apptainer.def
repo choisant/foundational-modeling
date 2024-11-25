@@ -1,0 +1,31 @@
+BootStrap: docker
+From: r-base
+
+# Image for running the tests in inferno
+
+%environment
+	export R_LIBS_USER=./R-packages
+
+%post
+	# Install dependencies
+	apt-get update -y
+	apt-get install curl -y
+	Rscript -e "install.packages('iterators')"
+	Rscript -e "install.packages('numDeriv')"
+	Rscript -e "install.packages('pracma')"
+	Rscript -e "install.packages('coda')"
+	Rscript -e "install.packages('igraph')"
+	Rscript -e "install.packages('rngtools')"
+	Rscript -e "install.packages('foreach')"
+	Rscript -e "install.packages('nimble')"
+	Rscript -e "install.packages('khroma')"
+	Rscript -e "install.packages('extraDistr')"
+	Rscript -e "install.packages('doRNG')"
+	Rscript -e "install.packages('doParallel')"
+
+%runscript
+    #!/bin/bash
+	# Input arguments must be in the order
+	# N, ncores, nchains, nsamples, trainfile, testfile
+	Rscript toy_experiment/inferno/inferno_analysis.R -N $1 -c $2 -p $3 -s $4 $5 $6 $7
+

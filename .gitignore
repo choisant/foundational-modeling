@@ -1,4 +1,6 @@
 _*
-log*
 *.rds
 __pycache__/
+R-packages/
+*.sif
+*.o*

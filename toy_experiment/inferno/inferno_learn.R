@@ -28,7 +28,8 @@ parser <- add_option(parser, c("-s", "--samples"),
         type = "integer", default = 120,
         help = "Number of MCMC samples to generate [default %default]")  
 
-# Positional arguments: metadata file, traindata file
+# Positional arguments: metadata file, traindata file, testdata file
+# Not using the test data
 args <- parse_args(parser, positional_arguments = 3)
 opt <- args$options
 
@@ -39,9 +40,9 @@ nchains <- opt$chains
 ncores <- opt$cores
 
 #ncheckpoints <- Inf # Use all datapoints to check for convergence
-#Apparently doesn't work
+#Apparently doesn't work?
 if (ntrain > 16) {
-	ncheckpoints <- ntrain %/% 4 # Use 25 % of training data for checkpoints
+	ncheckpoints <- 20 
 } else {ncheckpoints <- Inf}
 
 
@@ -55,9 +56,13 @@ train_df <- read.csv(traindatafile)
 traindata <- train_df[1:ntrain, ]
 test_df <- read.csv(testdatafile)
 
-# Create folder
-inferno_dir <- paste0("analysis/", sub('.csv$', '', basename(traindatafile)), 
-                        "-nsamples_", nsamples, "_ndata_", ntrain)
+# Create inference folder in same folder as metadata file
+parent_dir <- dirname(metadatafile)
+
+# Subfolder: traindatafile/nsamples-X_nchains-Y_ndata-Z
+
+inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)
 if(!dir.exists(inferno_dir)) {
 	cat(paste0("Creating dir ", inferno_dir, '\n'))
 	dir.create(inferno_dir, recursive=TRUE)
@@ -74,7 +79,7 @@ learnt <- learn(
     outputdir = inferno_dir,
     nsamples = nsamples,
     nchains = nchains,
-    ncheckpoints = 20,
+    ncheckpoints = ncheckpoints,
     parallel = ncores,
     appendtimestamp = FALSE,
     appendinfo = FALSE

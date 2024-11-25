@@ -1,0 +1,94 @@
+Log core 6 - Current time: 2024-11-20 10:55:25
+Defining model
+Building model
+Setting data and initial values
+Running calculate on model
+  [Note] Any error reports that follow may simply reflect missing values in model variables.
+Checking model sizes and dimensions
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+categorical sampler (2401)
+  - Alpha
+  - K[]  (2400 elements)
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+slice sampler (2401)
+  - Alpha
+  - K[]  (2400 elements)
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+
+Setup time 9 mins 
+
+Chain # 6 (chain 1 of 1 for this core)
+
+Datapoints for testing convergence:
+ #22 #106 #176 #191 #472 #584 #637 #686 #786 #1181 #1395 #1519 #1532 #1692 #1954 #1969 #1985 #2059 #2265 #2314 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 11:19:22
+MCMC time 15 mins 
+
+USED COMPONENTS: 60 OF 74 
+
+rel. MC standard error: 0.0162 to 0.0512
+eff. sample size: 382 to 3810
+needed thinning: 2 to 15
+Diagnostics time 2.6 secs 
+
+Total number of iterations 3600 - required further 117 
+
+Chain # 6 - chunk 2 (chain 1 of 1 for this core): increasing by 118 
+
+Iterations: 118 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 11:19:48
+MCMC time 15 mins 
+
+USED COMPONENTS: 59 OF 74 
+
+rel. MC standard error: 0.0159 to 0.0498
+eff. sample size: 403 to 3940
+needed thinning: 2 to 14
+Diagnostics time 0.092 secs 
+
+Total number of iterations 3718 - required further 0 
+
+Keeping last 60 samples with thinning 14 
+
+Plotting traces and samples.
+
+Current time: 2024-11-20 11:19:48
+MCMC + diagnostics time 15 mins 
+
+Current time: 2024-11-20 11:19:48
+Total time 15 mins 
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment

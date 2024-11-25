@@ -1,0 +1,886 @@
+Log core 20 - Current time: 2024-11-20 08:46:14
+Defining model
+Building model
+Setting data and initial values
+Running calculate on model
+  [Note] Any error reports that follow may simply reflect missing values in model variables.
+Checking model sizes and dimensions
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+categorical sampler (2101)
+  - Alpha
+  - K[]  (2100 elements)
+===== Monitors =====
+thin = 1: Bprob, Rmean, Rvar, W
+thin2 = 1: K
+===== Samplers =====
+slice sampler (2101)
+  - Alpha
+  - K[]  (2100 elements)
+conjugate sampler (519)
+  - Rmean[]  (148 elements)
+  - Rrate[]  (148 elements)
+  - Bprob[]  (74 elements)
+  - Rvar[]  (148 elements)
+  - W[1:74] 
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+
+Setup time 4.7 mins 
+
+Chain # 20 (chain 1 of 1 for this core)
+
+Datapoints for testing convergence:
+ #1 #21 #128 #205 #346 #572 #585 #593 #647 #695 #1138 #1285 #1323 #1409 #1412 #1551 #1625 #1722 #1916 #2024 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:01:51
+MCMC time 11 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0154 to 0.0712
+eff. sample size: 197 to 4220
+needed thinning: 2 to 28
+Diagnostics time 1.7 secs 
+
+Total number of iterations 3600 - required further 217 
+
+Chain # 20 - chunk 2 (chain 1 of 1 for this core): increasing by 218 
+
+Iterations: 218 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:02:33
+MCMC time 12 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0149 to 0.069
+eff. sample size: 210 to 4510
+needed thinning: 2 to 28
+Diagnostics time 0.16 secs 
+
+Total number of iterations 3818 - required further 217 
+
+Chain # 20 - chunk 3 (chain 1 of 1 for this core): increasing by 218 
+
+Iterations: 218 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:03:12
+MCMC time 12 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0145 to 0.0677
+eff. sample size: 218 to 4760
+needed thinning: 2 to 28
+Diagnostics time 0.17 secs 
+
+Total number of iterations 4036 - required further 217 
+
+Chain # 20 - chunk 4 (chain 1 of 1 for this core): increasing by 218 
+
+Iterations: 218 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:03:53
+MCMC time 13 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0147 to 0.0669
+eff. sample size: 224 to 4620
+needed thinning: 2 to 29
+Diagnostics time 0.23 secs 
+
+Total number of iterations 4254 - required further 225 
+
+Chain # 20 - chunk 5 (chain 1 of 1 for this core): increasing by 226 
+
+Iterations: 226 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:04:34
+MCMC time 14 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0145 to 0.0646
+eff. sample size: 239 to 4740
+needed thinning: 2 to 29
+Diagnostics time 0.16 secs 
+
+Total number of iterations 4480 - required further 225 
+
+Chain # 20 - chunk 6 (chain 1 of 1 for this core): increasing by 226 
+
+Iterations: 226 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:05:15
+MCMC time 14 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0134 to 0.0639
+eff. sample size: 245 to 5550
+needed thinning: 2 to 29
+Diagnostics time 0.17 secs 
+
+Total number of iterations 4706 - required further 225 
+
+Chain # 20 - chunk 7 (chain 1 of 1 for this core): increasing by 226 
+
+Iterations: 226 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:05:56
+MCMC time 15 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0134 to 0.0627
+eff. sample size: 254 to 5580
+needed thinning: 2 to 30
+Diagnostics time 0.18 secs 
+
+Total number of iterations 4932 - required further 233 
+
+Chain # 20 - chunk 8 (chain 1 of 1 for this core): increasing by 234 
+
+Iterations: 234 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:06:38
+MCMC time 16 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0131 to 0.0622
+eff. sample size: 258 to 5860
+needed thinning: 2 to 30
+Diagnostics time 0.8 secs 
+
+Total number of iterations 5166 - required further 233 
+
+Chain # 20 - chunk 9 (chain 1 of 1 for this core): increasing by 234 
+
+Iterations: 234 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:07:21
+MCMC time 16 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0129 to 0.0636
+eff. sample size: 247 to 6000
+needed thinning: 2 to 33
+Diagnostics time 0.17 secs 
+
+Total number of iterations 5400 - required further 256 
+
+Chain # 20 - chunk 10 (chain 1 of 1 for this core): increasing by 257 
+
+Iterations: 257 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:08:07
+MCMC time 17 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0118 to 0.0617
+eff. sample size: 263 to 7220
+needed thinning: 2 to 33
+Diagnostics time 0.2 secs 
+
+Total number of iterations 5657 - required further 256 
+
+Chain # 20 - chunk 11 (chain 1 of 1 for this core): increasing by 257 
+
+Iterations: 257 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:08:53
+MCMC time 18 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0117 to 0.0599
+eff. sample size: 279 to 7310
+needed thinning: 2 to 32
+Diagnostics time 0.17 secs 
+
+Total number of iterations 5914 - required further 248 
+
+Chain # 20 - chunk 12 (chain 1 of 1 for this core): increasing by 249 
+
+Iterations: 249 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:09:38
+MCMC time 19 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0121 to 0.0598
+eff. sample size: 279 to 6800
+needed thinning: 2 to 34
+Diagnostics time 0.18 secs 
+
+Total number of iterations 6163 - required further 264 
+
+Chain # 20 - chunk 13 (chain 1 of 1 for this core): increasing by 265 
+
+Iterations: 265 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:10:26
+MCMC time 19 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.011 to 0.0624
+eff. sample size: 256 to 8310
+needed thinning: 2 to 38
+Diagnostics time 0.21 secs 
+
+Total number of iterations 6428 - required further 295 
+
+Chain # 20 - chunk 14 (chain 1 of 1 for this core): increasing by 296 
+
+Iterations: 296 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:11:19
+MCMC time 20 mins 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.0122 to 0.0669
+eff. sample size: 223 to 6770
+needed thinning: 2 to 46
+Diagnostics time 0.26 secs 
+
+Total number of iterations 6724 - required further 357 
+
+Chain # 20 - chunk 15 (chain 1 of 1 for this core): increasing by 358 
+
+Iterations: 358 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:12:22
+MCMC time 21 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0116 to 0.068
+eff. sample size: 217 to 7490
+needed thinning: 2 to 50
+Diagnostics time 0.23 secs 
+
+Total number of iterations 7082 - required further 388 
+
+Chain # 20 - chunk 16 (chain 1 of 1 for this core): increasing by 389 
+
+Iterations: 389 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:13:30
+MCMC time 23 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0111 to 0.07
+eff. sample size: 204 to 8180
+needed thinning: 2 to 55
+Diagnostics time 0.22 secs 
+
+Total number of iterations 7471 - required further 427 
+
+Chain # 20 - chunk 17 (chain 1 of 1 for this core): increasing by 428 
+
+Iterations: 428 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:14:46
+MCMC time 24 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0116 to 0.0771
+eff. sample size: 168 to 7400
+needed thinning: 2 to 71
+Diagnostics time 0.28 secs 
+
+Total number of iterations 7899 - required further 550 
+
+Chain # 20 - chunk 18 (chain 1 of 1 for this core): increasing by 551 
+
+Iterations: 551 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:16:24
+MCMC time 25 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.0103 to 0.0797
+eff. sample size: 158 to 9420
+needed thinning: 2 to 81
+Diagnostics time 0.38 secs 
+
+Total number of iterations 8450 - required further 628 
+
+Chain # 20 - chunk 19 (chain 1 of 1 for this core): increasing by 629 
+
+Iterations: 629 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:18:15
+MCMC time 27 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0095 to 0.0798
+eff. sample size: 157 to 11100
+needed thinning: 2 to 87
+Diagnostics time 0.97 secs 
+
+Total number of iterations 9079 - required further 674 
+
+Chain # 20 - chunk 20 (chain 1 of 1 for this core): increasing by 675 
+
+Iterations: 675 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:20:15
+MCMC time 29 mins 
+
+USED COMPONENTS: 57 OF 74 
+
+rel. MC standard error: 0.0108 to 0.079
+eff. sample size: 160 to 8560
+needed thinning: 2 to 92
+Diagnostics time 0.36 secs 
+
+Total number of iterations 9754 - required further 713 
+
+Chain # 20 - chunk 21 (chain 1 of 1 for this core): increasing by 714 
+
+Iterations: 714 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:22:20
+MCMC time 31 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.0103 to 0.078
+eff. sample size: 165 to 9420
+needed thinning: 2 to 96
+Diagnostics time 0.38 secs 
+
+Total number of iterations 10468 - required further 744 
+
+Chain # 20 - chunk 22 (chain 1 of 1 for this core): increasing by 745 
+
+Iterations: 745 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:24:31
+MCMC time 34 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00909 to 0.0768
+eff. sample size: 169 to 12100
+needed thinning: 2 to 100
+Diagnostics time 0.39 secs 
+
+Total number of iterations 11213 - required further 775 
+
+Chain # 20 - chunk 23 (chain 1 of 1 for this core): increasing by 776 
+
+Iterations: 776 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:26:48
+MCMC time 36 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.00939 to 0.0761
+eff. sample size: 173 to 11300
+needed thinning: 2 to 105
+Diagnostics time 0.4 secs 
+
+Total number of iterations 11989 - required further 814 
+
+Chain # 20 - chunk 24 (chain 1 of 1 for this core): increasing by 815 
+
+Iterations: 815 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:29:11
+MCMC time 38 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00849 to 0.0741
+eff. sample size: 182 to 13900
+needed thinning: 2 to 106
+Diagnostics time 1 secs 
+
+Total number of iterations 12804 - required further 822 
+
+Chain # 20 - chunk 25 (chain 1 of 1 for this core): increasing by 823 
+
+Iterations: 823 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:31:36
+MCMC time 41 mins 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.00873 to 0.0721
+eff. sample size: 192 to 13100
+needed thinning: 2 to 107
+Diagnostics time 0.43 secs 
+
+Total number of iterations 13627 - required further 829 
+
+Chain # 20 - chunk 26 (chain 1 of 1 for this core): increasing by 830 
+
+Iterations: 830 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:34:01
+MCMC time 43 mins 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00882 to 0.0706
+eff. sample size: 200 to 12900
+needed thinning: 2 to 109
+Diagnostics time 0.42 secs 
+
+Total number of iterations 14457 - required further 845 
+
+Chain # 20 - chunk 27 (chain 1 of 1 for this core): increasing by 846 
+
+Iterations: 846 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:36:29
+MCMC time 45 mins 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00755 to 0.0689
+eff. sample size: 210 to 17500
+needed thinning: 2 to 110
+Diagnostics time 0.44 secs 
+
+Total number of iterations 15303 - required further 853 
+
+Chain # 20 - chunk 28 (chain 1 of 1 for this core): increasing by 854 
+
+Iterations: 854 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:38:59
+MCMC time 48 mins 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00828 to 0.0678
+eff. sample size: 217 to 14600
+needed thinning: 2 to 112
+Diagnostics time 0.49 secs 
+
+Total number of iterations 16157 - required further 868 
+
+Chain # 20 - chunk 29 (chain 1 of 1 for this core): increasing by 869 
+
+Iterations: 869 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:41:31
+MCMC time 51 mins 
+
+USED COMPONENTS: 53 OF 74 
+
+rel. MC standard error: 0.00801 to 0.0661
+eff. sample size: 229 to 15600
+needed thinning: 2 to 112
+Diagnostics time 1 secs 
+
+Total number of iterations 17026 - required further 868 
+
+Chain # 20 - chunk 30 (chain 1 of 1 for this core): increasing by 869 
+
+Iterations: 869 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:44:04
+MCMC time 53 mins 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00722 to 0.0648
+eff. sample size: 238 to 19200
+needed thinning: 2 to 113
+Diagnostics time 0.45 secs 
+
+Total number of iterations 17895 - required further 876 
+
+Chain # 20 - chunk 31 (chain 1 of 1 for this core): increasing by 877 
+
+Iterations: 877 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:46:37
+MCMC time 56 mins 
+
+USED COMPONENTS: 53 OF 74 
+
+rel. MC standard error: 0.00727 to 0.0638
+eff. sample size: 246 to 18900
+needed thinning: 2 to 115
+Diagnostics time 0.43 secs 
+
+Total number of iterations 18772 - required further 891 
+
+Chain # 20 - chunk 32 (chain 1 of 1 for this core): increasing by 892 
+
+Iterations: 892 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:49:13
+MCMC time 58 mins 
+
+USED COMPONENTS: 53 OF 74 
+
+rel. MC standard error: 0.00749 to 0.0628
+eff. sample size: 254 to 17800
+needed thinning: 2 to 117
+Diagnostics time 0.54 secs 
+
+Total number of iterations 19664 - required further 907 
+
+Chain # 20 - chunk 33 (chain 1 of 1 for this core): increasing by 908 
+
+Iterations: 908 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:51:54
+MCMC time 1 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.0076 to 0.0618
+eff. sample size: 261 to 17300
+needed thinning: 2 to 119
+Diagnostics time 0.43 secs 
+
+Total number of iterations 20572 - required further 922 
+
+Chain # 20 - chunk 34 (chain 1 of 1 for this core): increasing by 923 
+
+Iterations: 923 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:54:37
+MCMC time 1.1 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00727 to 0.0606
+eff. sample size: 272 to 18900
+needed thinning: 2 to 119
+Diagnostics time 0.49 secs 
+
+Total number of iterations 21495 - required further 922 
+
+Chain # 20 - chunk 35 (chain 1 of 1 for this core): increasing by 923 
+
+Iterations: 923 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 09:57:18
+MCMC time 1.1 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00694 to 0.0595
+eff. sample size: 283 to 20800
+needed thinning: 2 to 119
+Diagnostics time 0.55 secs 
+
+Total number of iterations 22418 - required further 922 
+
+Chain # 20 - chunk 36 (chain 1 of 1 for this core): increasing by 923 
+
+Iterations: 923 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:00:00
+MCMC time 1.2 hours 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.00674 to 0.0589
+eff. sample size: 288 to 22000
+needed thinning: 2 to 122
+Diagnostics time 0.46 secs 
+
+Total number of iterations 23341 - required further 946 
+
+Chain # 20 - chunk 37 (chain 1 of 1 for this core): increasing by 947 
+
+Iterations: 947 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:02:45
+MCMC time 1.2 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00675 to 0.0575
+eff. sample size: 303 to 22000
+needed thinning: 2 to 121
+Diagnostics time 0.49 secs 
+
+Total number of iterations 24288 - required further 938 
+
+Chain # 20 - chunk 38 (chain 1 of 1 for this core): increasing by 939 
+
+Iterations: 939 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:05:29
+MCMC time 1.2 hours 
+
+USED COMPONENTS: 56 OF 74 
+
+rel. MC standard error: 0.00647 to 0.0564
+eff. sample size: 315 to 23900
+needed thinning: 2 to 121
+Diagnostics time 1 secs 
+
+Total number of iterations 25227 - required further 938 
+
+Chain # 20 - chunk 39 (chain 1 of 1 for this core): increasing by 939 
+
+Iterations: 939 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:08:12
+MCMC time 1.3 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00677 to 0.0555
+eff. sample size: 324 to 21800
+needed thinning: 2 to 122
+Diagnostics time 0.44 secs 
+
+Total number of iterations 26166 - required further 946 
+
+Chain # 20 - chunk 40 (chain 1 of 1 for this core): increasing by 947 
+
+Iterations: 947 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:10:57
+MCMC time 1.3 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00636 to 0.0545
+eff. sample size: 336 to 24700
+needed thinning: 2 to 121
+Diagnostics time 0.49 secs 
+
+Total number of iterations 27113 - required further 938 
+
+Chain # 20 - chunk 41 (chain 1 of 1 for this core): increasing by 939 
+
+Iterations: 939 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:13:41
+MCMC time 1.4 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00636 to 0.0539
+eff. sample size: 345 to 24800
+needed thinning: 2 to 123
+Diagnostics time 0.54 secs 
+
+Total number of iterations 28052 - required further 953 
+
+Chain # 20 - chunk 42 (chain 1 of 1 for this core): increasing by 954 
+
+Iterations: 954 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:16:27
+MCMC time 1.4 hours 
+
+USED COMPONENTS: 54 OF 74 
+
+rel. MC standard error: 0.00621 to 0.0533
+eff. sample size: 352 to 25900
+needed thinning: 2 to 124
+Diagnostics time 1.1 secs 
+
+Total number of iterations 29006 - required further 961 
+
+Chain # 20 - chunk 43 (chain 1 of 1 for this core): increasing by 962 
+
+Iterations: 962 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:19:15
+MCMC time 1.5 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00614 to 0.0523
+eff. sample size: 366 to 26600
+needed thinning: 2 to 123
+Diagnostics time 0.49 secs 
+
+Total number of iterations 29968 - required further 953 
+
+Chain # 20 - chunk 44 (chain 1 of 1 for this core): increasing by 954 
+
+Iterations: 954 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:22:00
+MCMC time 1.5 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00603 to 0.0516
+eff. sample size: 376 to 27500
+needed thinning: 2 to 124
+Diagnostics time 0.55 secs 
+
+Total number of iterations 30922 - required further 961 
+
+Chain # 20 - chunk 45 (chain 1 of 1 for this core): increasing by 962 
+
+Iterations: 962 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:24:50
+MCMC time 1.6 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00575 to 0.0505
+eff. sample size: 391 to 30200
+needed thinning: 2 to 123
+Diagnostics time 1.1 secs 
+
+Total number of iterations 31884 - required further 953 
+
+Chain # 20 - chunk 46 (chain 1 of 1 for this core): increasing by 954 
+
+Iterations: 954 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-20 10:27:42
+MCMC time 1.6 hours 
+
+USED COMPONENTS: 55 OF 74 
+
+rel. MC standard error: 0.00604 to 0.05
+eff. sample size: 400 to 27400
+needed thinning: 2 to 123
+Diagnostics time 0.59 secs 
+
+Total number of iterations 32838 - required further 0 
+
+Keeping last 60 samples with thinning 123 
+
+Plotting traces and samples.
+
+Current time: 2024-11-20 10:27:45
+MCMC + diagnostics time 1.6 hours 
+
+Current time: 2024-11-20 10:27:45
+Total time 1.6 hours 
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
+loaded inferno and set parent environment
