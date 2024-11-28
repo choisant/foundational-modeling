@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 
 class NeuralNetwork(nn.Module):
     def __init__(self, activation:str, in_channels:int, out_channels:int, L: int = 1024, n_hidden:int = 1):
@@ -29,3 +28,4 @@ class NeuralNetwork(nn.Module):
                 x = self.tanh(x)
         x = self.last_layer(x)
         return x
+    

@@ -1,0 +1,227 @@
+Log core 5 - Current time: 2024-11-28 11:33:27
+Defining model
+  [Note] 'Clatinit' is provided in 'constants' but not used in the model code and is being ignored.
+Building model
+Setting data and initial values
+Running calculate on model
+  [Note] Any error reports that follow may simply reflect missing values in model variables.
+Checking model sizes and dimensions
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+===== Monitors =====
+thin = 1: Bprob, Cmean, Cvar, W
+thin2 = 1: K
+===== Samplers =====
+conjugate sampler (297)
+  - Cmean[]  (74 elements)
+  - Crate[]  (74 elements)
+  - Bprob[]  (74 elements)
+  - Cvar[]  (74 elements)
+  - W[1:74] 
+categorical sampler (251)
+  - Alpha
+  - K[]  (250 elements)
+===== Monitors =====
+thin = 1: Bprob, Cmean, Cvar, W
+thin2 = 1: K
+===== Samplers =====
+slice sampler (251)
+  - Alpha
+  - K[]  (250 elements)
+conjugate sampler (297)
+  - Cmean[]  (74 elements)
+  - Crate[]  (74 elements)
+  - Bprob[]  (74 elements)
+  - Cvar[]  (74 elements)
+  - W[1:74] 
+Compiling
+  [Note] This may take a minute.
+  [Note] Use 'showCompilerOutput = TRUE' to see C++ compilation details.
+
+Setup time 1.7 mins 
+
+Chain # 9 (chain 1 of 2 for this core)
+
+Datapoints for testing convergence:
+ #3 #16 #19 #33 #40 #44 #54 #59 #97 #114 #131 #144 #172 #200 #230 #237 #238 #239 #243 #247 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:36:05
+MCMC time 57 secs 
+
+USED COMPONENTS: 36 OF 74 
+
+rel. MC standard error: 0.0142 to 0.0487
+eff. sample size: 422 to 4930
+needed thinning: 2 to 13
+Diagnostics time 2.5 secs 
+
+Total number of iterations 3600 - required further 0 
+
+Keeping last 60 samples with thinning 13 
+
+Plotting traces and samples.
+
+Current time: 2024-11-28 11:36:09
+MCMC + diagnostics time 1 mins 
+
+Chain # 10 (chain 2 of 2 for this core)
+
+Datapoints for testing convergence:
+ #30 #49 #63 #91 #109 #113 #122 #133 #137 #142 #151 #158 #184 #207 #214 #219 #221 #225 #237 #240 
+
+Iterations: 3600 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:05
+MCMC time 2 mins 
+
+USED COMPONENTS: 35 OF 74 
+
+rel. MC standard error: 0.0179 to 0.0632
+eff. sample size: 250 to 3130
+needed thinning: 2 to 22
+Diagnostics time 2.8 secs 
+
+Total number of iterations 3600 - required further 171 
+
+Chain # 10 - chunk 2 (chain 2 of 2 for this core): increasing by 172 
+
+Iterations: 172 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:12
+MCMC time 2.1 mins 
+
+USED COMPONENTS: 34 OF 74 
+
+rel. MC standard error: 0.0173 to 0.0574
+eff. sample size: 303 to 3350
+needed thinning: 2 to 19
+Diagnostics time 0.13 secs 
+
+Total number of iterations 3772 - required further 148 
+
+Chain # 10 - chunk 3 (chain 2 of 2 for this core): increasing by 149 
+
+Iterations: 149 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:14
+MCMC time 2.1 mins 
+
+USED COMPONENTS: 34 OF 74 
+
+rel. MC standard error: 0.0178 to 0.0563
+eff. sample size: 315 to 3160
+needed thinning: 2 to 19
+Diagnostics time 0.1 secs 
+
+Total number of iterations 3921 - required further 148 
+
+Chain # 10 - chunk 4 (chain 2 of 2 for this core): increasing by 149 
+
+Iterations: 149 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:17
+MCMC time 2.2 mins 
+
+USED COMPONENTS: 32 OF 74 
+
+rel. MC standard error: 0.0159 to 0.0578
+eff. sample size: 300 to 3940
+needed thinning: 2 to 21
+Diagnostics time 0.12 secs 
+
+Total number of iterations 4070 - required further 163 
+
+Chain # 10 - chunk 5 (chain 2 of 2 for this core): increasing by 164 
+
+Iterations: 164 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:19
+MCMC time 2.2 mins 
+
+USED COMPONENTS: 34 OF 74 
+
+rel. MC standard error: 0.0158 to 0.0602
+eff. sample size: 276 to 4030
+needed thinning: 2 to 23
+Diagnostics time 0.13 secs 
+
+Total number of iterations 4234 - required further 179 
+
+Chain # 10 - chunk 6 (chain 2 of 2 for this core): increasing by 180 
+
+Iterations: 180 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:23
+MCMC time 2.3 mins 
+
+USED COMPONENTS: 35 OF 74 
+
+rel. MC standard error: 0.0149 to 0.0606
+eff. sample size: 272 to 4530
+needed thinning: 2 to 25
+Diagnostics time 0.13 secs 
+
+Total number of iterations 4414 - required further 194 
+
+Chain # 10 - chunk 7 (chain 2 of 2 for this core): increasing by 195 
+
+Iterations: 195 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:26
+MCMC time 2.3 mins 
+
+USED COMPONENTS: 34 OF 74 
+
+rel. MC standard error: 0.0163 to 0.0569
+eff. sample size: 309 to 3760
+needed thinning: 2 to 23
+Diagnostics time 0.14 secs 
+
+Total number of iterations 4609 - required further 179 
+
+Chain # 10 - chunk 8 (chain 2 of 2 for this core): increasing by 180 
+
+Iterations: 180 
+|-------------|-------------|-------------|-------------|
+|-------------------------------------------------------|
+
+Current time: 2024-11-28 11:37:29
+MCMC time 2.4 mins 
+
+USED COMPONENTS: 35 OF 74 
+
+rel. MC standard error: 0.0152 to 0.0465
+eff. sample size: 463 to 4310
+needed thinning: 2 to 16
+Diagnostics time 0.16 secs 
+
+Total number of iterations 4789 - required further 0 
+
+Keeping last 60 samples with thinning 16 
+
+Plotting traces and samples.
+
+Current time: 2024-11-28 11:37:29
+MCMC + diagnostics time 2.4 mins 
+
+Current time: 2024-11-28 11:37:29
+Total time 2.4 mins 

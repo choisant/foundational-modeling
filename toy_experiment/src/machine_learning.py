@@ -7,6 +7,8 @@ from torch import Tensor
 
 from tqdm import tqdm
 import pandas as pd
+import numpy as np
+import sys
 
 def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train=False):
     """
@@ -66,6 +68,8 @@ def predict_classifier(net, testdata, num_classes:int, size:int, device):
     It can also return the softmax values of the raw output from the model.
     Does not shuffle the data.
     """
+    assert len(testdata)%size==0, "Please choose batch size so that testdata%size==0."
+
     dataset = DataLoader(testdata, size, shuffle=False) #shuffle data and choose batch size
     logits = torch.zeros((len(dataset), size, num_classes))
     truth = torch.zeros((len(dataset), size))
@@ -77,4 +81,65 @@ def predict_classifier(net, testdata, num_classes:int, size:int, device):
             logits[i] = net(X.to(device))
             truth[i] = torch.argmax(y, dim=-1).to(torch.int)
             i = i+1
-    return torch.flatten(truth), logits
+    return torch.flatten(truth), logits.view(-1, num_classes)
+
+def enable_dropout(net):
+    """ Function to enable the dropout layers during test-time """
+    for m in net.modules():
+        if m.__class__.__name__.startswith('Dropout'):
+            m.train()
+
+def mc_predictions(net,
+                   testdata,
+                   batchsize,
+                   forward_passes,
+                   n_classes,
+                   n_samples):
+    """ Function to get the monte-carlo samples and uncertainty estimates
+    through multiple forward passes
+    #https://stackoverflow.com/questions/63285197/measuring-uncertainty-using-mc-dropout-on-pytorch
+
+    Parameters
+    ----------
+    data_loader : object
+        data loader object from the data loader module
+    forward_passes : int
+        number of monte-carlo samples/forward passes
+    net : object
+        ML model
+    n_classes : int
+        number of classes in the dataset
+    n_samples : int
+        number of samples in the test set
+    """
+    data_loader = DataLoader(testdata, batchsize, shuffle=False)
+    dropout_predictions = np.empty((0, n_samples, n_classes))
+    for i in range(forward_passes):
+        predictions = np.empty((0, n_classes))
+        net.eval()
+        enable_dropout(net)
+        for i, (X, y) in enumerate(data_loader):
+            X = X.to(torch.device('cuda'))
+            with torch.no_grad():
+                output = net(X)
+                output = torch.softmax(output, dim=-1)
+            predictions = np.vstack((predictions, output.cpu().numpy()))
+
+        dropout_predictions = np.vstack((dropout_predictions,
+                                         predictions[np.newaxis, :, :]))
+        # dropout predictions - shape (forward_passes, n_samples, n_classes)
+
+    # Calculating mean across multiple MCD forward passes 
+    mean = np.mean(dropout_predictions, axis=0)  # shape (n_samples, n_classes)
+
+    # Calculating variance across multiple MCD forward passes 
+    variance = np.var(dropout_predictions, axis=0)  # shape (n_samples, n_classes)
+
+    #epsilon = sys.float_info.min
+    # Calculating entropy across multiple MCD forward passes 
+    #entropy = -np.sum(mean * np.log(mean + epsilon), axis=-1)  # shape (n_samples,)
+
+    # Calculating mutual information across multiple MCD forward passes 
+    #mutual_info = entropy - np.mean(np.sum(-dropout_predictions * np.log(dropout_predictions + epsilon),
+    #                                       axis=-1), axis=0)  # shape (n_samples,)
+    return mean, variance

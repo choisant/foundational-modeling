@@ -8,9 +8,10 @@ From: env.sif
 
 %post
 
+
 %runscript
     #!/bin/bash
 	# Input arguments must be in the order
 	# scriptfile, N, ncores, nchains, nsamples, metadata, trainfile, testfile
-	Rscript $1 -N $2 -c $3 -p $4 -s $5 $6 $7 $8
+	# Rscript $1 -N $2 -c $3 -p $4 -s $5 $6 $7 $8
 
