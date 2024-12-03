@@ -59,13 +59,16 @@ inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(train
 ##########################################
 
 # Classes
-labels <- cbind(color = c("red", "green"))
+labels <- cbind(color = c("red", "blue"))
 nlabels <- length(labels)
-xvalues <- test_df[c("x1", "x2")]
+xvalues <- test_df[c("r_x", "a_x")]
 ntest <- dim(xvalues)[1]
 if (nsamples > 100) {
 	nsamples_save <- 100
 } else {nsamples_save <- nsamples}
+
+starttime <- Sys.time()
+cat("Starting inference. \n")
         
 Pr_output <- Pr(Y = labels,
                 X = xvalues,
@@ -73,6 +76,17 @@ Pr_output <- Pr(Y = labels,
                 nsamples = nsamples_save,
                 parallel = ncores,
                 silent = FALSE)
+
+
+cat("End inference. \n")
+
+printdifftime <- function(time1, time2) {
+        difference = difftime(time1, time2, units = 'auto')
+        paste0(signif(difference, 2), ' ', attr(difference, 'units'))
+    }
+
+cat(paste0("Total time for inference: ", printdifftime(Sys.time(), starttime)))
+
 
 condfreqs <- Pr_output$samples
 quantiles <- Pr_output$quantiles
@@ -105,16 +119,17 @@ if ("color" %in% names(test_df)){
 # Write to file
 cat('Writing to file \n')
 h5write(Pr_output$values, file = h5file, name = 'probabilities',
-        index = list(NULL, NULL))
+        index = list(NULL, NULL), storage.mode = storage.mode(Pr_output$values))
 h5write(quantiles, file = h5file, name = 'quantiles',
-        index = list(NULL, NULL, NULL))
+        index = list(NULL, NULL, NULL), storage.mode = storage.mode(quantiles))
 h5write(condfreqs, file = h5file, name = 'samples',
-        index = list(NULL, NULL, NULL))
+        index = list(NULL, NULL, NULL), storage.mode = storage.mode(condfreqs))
 h5write(t(test_df[c("x1", "x2")]),
-        file = h5file, name = 'data', index = list(NULL, NULL))
+        file = h5file, name = 'data', index = list(NULL, NULL)
+        , storage.mode = storage.mode(t(test_df[c("x1", "x2")])))
 if ("color" %in% names(test_df)) {
         h5write(t(test_df["color"]), file = h5file, name = 'truth',
-                index = list(NULL))
+                index = list(NULL), storage.mode = storage.mode(t(test_df["color"])))
 }
 
 #For testing, let's plot the first test point to see that we can reproduce it in python
