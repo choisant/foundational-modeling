@@ -6,8 +6,9 @@ library('optparse')
 # SETUP
 ##########################################
 
-# This script can be used with an argument specifying the number of data points to train the model oncores
-# It should be used with the path to the training data and the test data
+# Usage
+# Rscript inferno_test.R <options> metadatafile trainfile testfile
+
 # Read and parse arguments
 
 parser <- OptionParser(usage="%prog [options] trainfile testfile")
@@ -28,6 +29,10 @@ parser <- add_option(parser, c("-s", "--samples"),
         type = "integer", default = 120,
         help = "Number of MCMC samples to generate [default %default]")  
 
+parser <- add_option(parser, c("--polar"),
+        type = "logical", default = FALSE,
+        help = "Boolean, use polar coordinates [default %default]")  
+
 # Positional arguments: metadata file, traindata file, testdata file
 args <- parse_args(parser, positional_arguments = 3)
 opt <- args$options
@@ -37,6 +42,7 @@ ntrain <- opt$trainpoints
 nsamples <- opt$samples
 nchains <- opt$chains
 ncores <- opt$cores
+polar <- TRUE
 
 
 # Read Input arguments
@@ -61,14 +67,20 @@ inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(train
 # Classes
 labels <- cbind(color = c("red", "blue"))
 nlabels <- length(labels)
-xvalues <- test_df[c("r_x", "a_x")]
+if (polar) {
+	xvalues <- test_df[c("r_x", "a_x")]
+} else {
+	xvalues <- test_df[c("x1", "x2")]
+}
+nxvalues <- 2
+
 ntest <- dim(xvalues)[1]
 if (nsamples > 100) {
 	nsamples_save <- 100
 } else {nsamples_save <- nsamples}
 
 starttime <- Sys.time()
-cat("Starting inference. \n")
+cat("Starting inference.")
         
 Pr_output <- Pr(Y = labels,
                 X = xvalues,
@@ -112,24 +124,29 @@ if (!file.exists(h5file)) {
 h5createDataset(h5file, 'probabilities', dims = c(nlabels, ntest))
 h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
 h5createDataset(h5file, 'samples', dims = c(nlabels, nsamples_save, ntest))
-h5createDataset(h5file, 'data', dims = c(nlabels, ntest))
+h5createDataset(h5file, 'data', dims = c(nxvalues, ntest))
 if ("color" %in% names(test_df)){
         h5createDataset(h5file, 'truth', dims = c(ntest))
 }
 # Write to file
 cat('Writing to file \n')
 h5write(Pr_output$values, file = h5file, name = 'probabilities',
-        index = list(NULL, NULL), storage.mode = storage.mode(Pr_output$values))
+        index = list(NULL, NULL))
 h5write(quantiles, file = h5file, name = 'quantiles',
-        index = list(NULL, NULL, NULL), storage.mode = storage.mode(quantiles))
+        index = list(NULL, NULL, NULL))
 h5write(condfreqs, file = h5file, name = 'samples',
-        index = list(NULL, NULL, NULL), storage.mode = storage.mode(condfreqs))
-h5write(t(test_df[c("x1", "x2")]),
+        index = list(NULL, NULL, NULL))
+if (polar) {
+	h5write(t(test_df[c("r_x", "a_x")]),
         file = h5file, name = 'data', index = list(NULL, NULL)
-        , storage.mode = storage.mode(t(test_df[c("x1", "x2")])))
+        )
+} else {
+	h5write(t(test_df[c("x1", "x2")]),
+        file = h5file, name = 'data', index = list(NULL, NULL))
+}
 if ("color" %in% names(test_df)) {
         h5write(t(test_df["color"]), file = h5file, name = 'truth',
-                index = list(NULL), storage.mode = storage.mode(t(test_df["color"])))
+                index = list(NULL))
 }
 
 #For testing, let's plot the first test point to see that we can reproduce it in python

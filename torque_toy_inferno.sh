@@ -13,6 +13,13 @@
 #nlist=(2 4 8 16 32 64 128 256 300 500 512 900 1024 1200 1500 1800 2048 2100 2400 2700 3000 4096)
 nlist=(250 2100 3600)
 
+script="toy_experiment/inferno/inferno_learn.R"
+metadata="toy_experiment/inferno/metadata_r_a_x.csv"
+trainfile="toy_experiment/data/train_n_5000_kr9_kb3_s1_vary_a1_False.csv"
+testfile="toy_experiment/data/x1_x2_grid.csv"
+nchains=20
+ncores=5
+nsamples=800
+
 cd foundational-modeling
-#apptainer run env_test.sif ${nlist[${PBS_ARRAYID}-1]} 20 5 1200 metadata.csv data/train_n_5000_kr7_kg3_s1_vary_a1_False.csv data/val_n_5000_kr7_kg3_s1_vary_a1_False.csv
-apptainer run apptainer/updated_env.sif toy_experiment/inferno/inferno_learn.R ${nlist[${PBS_ARRAYID}-1]} 20 5 800 toy_experiment/inferno/metadata_r_a_x.csv toy_experiment/data/train_n_5000_kr9_kb3_s1_vary_a1_False.csv toy_experiment/data/x1_x2_grid.csv
+apptainer run apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} ${metadata} ${trainfile} ${testfile}

@@ -49,13 +49,14 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
 
 ###### Plots
 def red_blue_cmap():
-    c = ["#b2182b","#ef8a62","#fddbc7", "#d9d9d9", "#d1e5f0","#67a9cf","#2166ac"]
-    v = [0,.15,.4,.5,0.6,.9,1.]
+    #c = ["#b2182b","#ef8a62","#fddbc7", "#d9d9d9", "#d1e5f0","#67a9cf","#2166ac"]
+    c = ["#a50026","#d73027","#fdae61", "#f7f7f7", "#abd9e9","#4575b4","#313695"]
+    v = [0,.2,.4,.5,0.6,.8,1.]
     l = list(zip(v,c))
     cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
-def plot_grid(grid_df, pred_key, fig, ax, nx:int = 100):
+def plot_grid(grid_df, pred_key, ax, nx:int = 100):
     x1_lim = 25
     x2_lim = 25
 
@@ -70,7 +71,7 @@ def plot_grid(grid_df, pred_key, fig, ax, nx:int = 100):
     ax.set_xlim(-x1_lim, x1_lim)
     ax.set_ylim(-x2_lim, x2_lim)
 
-    return fig, ax
+    return ax
 
 
 ##### Misc math
