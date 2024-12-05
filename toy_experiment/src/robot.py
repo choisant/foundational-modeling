@@ -53,11 +53,16 @@ class Robot:
                 r1_arr = np.zeros(n)
                 # Different probabilities for different colors
                 # Choose low or high probability section
-                section = rng.choice(["High", "Low"], size = n, p = [0.7, 0.3])
-                r1_arr = np.where((section=="High") & (c=="red"), rng.uniform(0, np.pi*(4/3), n), r1_arr)
-                r1_arr = np.where((section=="Low") & (c=="red"), rng.uniform(np.pi*(4/3), 2*np.pi, n), r1_arr)
-                r1_arr = np.where((section=="High") & (c=="blue"), rng.uniform(np.pi, 2*np.pi, n), r1_arr)
-                r1_arr = np.where((section=="Low") & (c=="blue"), rng.uniform(0, np.pi, n), r1_arr)
+                section = rng.choice(["1stSection", "2ndSection", "3rdSection", "4thSection"], size = n, p = [0.1, 0.4, 0.1, 0.4])
+                # Made this hard for myself- 1st section is +- 1/4 from 0
+                r1_arr = np.where((section=="1stSection") & (c=="red"), rng.uniform(-np.pi*(1/4), np.pi*(1/4), n), r1_arr)
+                r1_arr = np.where(r1_arr < 0, r1_arr + 2*np.pi, r1_arr)
+                
+                r1_arr = np.where((section=="2ndSection") & (c=="red"), rng.uniform(np.pi*(1/4), np.pi*(3/4), n), r1_arr)
+                r1_arr = np.where((section=="3rdSection") & (c=="red"), rng.uniform(np.pi*(3/4), np.pi*(5/4), n), r1_arr)
+                r1_arr = np.where((section=="4thSection") & (c=="red"), rng.uniform(np.pi*(5/4), np.pi*(7/4), n), r1_arr)
+                # Nothing for blue
+                r1_arr = np.where(c=="blue", rng.uniform(0, 2*np.pi, n), r1_arr)
                 return r1_arr
             else: return(rng.uniform(0, 2*np.pi, n))
 

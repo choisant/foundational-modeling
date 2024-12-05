@@ -10,6 +10,8 @@ import matplotlib as mpl
 import argparse
 import os
 import math
+from timeit import default_timer as timer
+from datetime import timedelta
 
 # import custom functions from src folder
 module_path = str(Path.cwd() / "../src")
@@ -78,12 +80,12 @@ def sqrtgamma_num(x1, x2, r1, r2, dx=0.001):
         print(da1x, da1y, da2x, da2y)
     return(abs(val))
 
-def p_r1(r1, r2, c):
+def p_r1(r1, r2, c, kr, kb):
     # Gamma distribution
     if (c == "red"):
-        kc = 5
+        kc = kr
     elif (c == "blue"):
-        kc = 3
+        kc = kb
     else:
         print("Please input valid color.")
         return None
@@ -96,11 +98,28 @@ def p_c(c):
     if (c == "blue"):
         return 0.5
 
-def p_theta1():
-    # Uniform distribution
-    min_theta1 = 0
-    max_theta1 = 2*np.pi
-    return 1/(max_theta1-min_theta1)
+def p_theta1(a1, c, vary_a1=False):
+    # Step wise distribution
+    min_theta2 = 0
+    max_theta2 = np.pi
+    length = (max_theta2-min_theta2)
+    if vary_a1:
+        if c =="red":
+            if a1 < np.pi/4:
+                p_a1 = 0.4/(length)
+            elif np.pi/4 < a1 < 3*np.pi/4:
+                p_a1 = 1.6/(length)
+            elif 3*np.pi/4 < a1 < 5*np.pi/4:
+                p_a1 =0.4/(length)
+            elif 5*np.pi/4 < a1 < 7*np.pi/4:
+                p_a1 = 1.6/(length)
+            else:
+                p_a1 = 0.4/(length)
+            return p_a1
+        else:
+            return 1/(max_theta2-min_theta2)
+    else:
+        return 1/(max_theta2-min_theta2)
 
 def p_theta2():
     # Uniform distribution
@@ -164,7 +183,7 @@ if (i_stop > n_data):
 # Main function
 ##################################
 
-def P_c_and_x(c, x1, x2, R2, R1_min, n_x_mc:int = 10, n_r1_mc:int = 50):
+def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:int = 50):
     # Define area of x to integrate over
     # Easiest to define it in polar coordinates because of limits in r1 integral
     r, a = cartesian_to_polar(x1, x2)
@@ -232,10 +251,14 @@ def P_c_and_x(c, x1, x2, R2, R1_min, n_x_mc:int = 10, n_r1_mc:int = 50):
                 val[i] = 0
                 n_r1 = n_r1 -1
             else:
-                val[i] = p_theta1()*p_theta2()*p_r1(r1, R2, c)*sqrtgamma_num(x1_n, x2_n, r1, R2)
-            dr1 = (r1_max - r1_min)/n_r1
+                val[i] = p_theta1(theta1_n, c, vary_a1)*p_theta2()*p_r1(r1, R2, c, kr, kb)*sqrtgamma_num(x1_n, x2_n, r1, R2)
+        
         # Potential error source
-        integral_r1 = math.fsum(val)*dr1
+        if(n_r1 > 0):
+                dr1 = (r1_max - r1_min)/n_r1
+                integral_r1 = math.fsum(val)*dr1
+        else: 
+            integral_r1 = 0
         
         sum_integral_x = sum_integral_x + integral_r1
     # Is this how it works?
@@ -252,19 +275,24 @@ n_data = len(data)
 
 R2 = 3
 R1_min = 2*R2
+kr = 7
+kb = 3
+vary_a1 = True
 
 data["r_x"], data["a_x"] = cartesian_to_polar(data["x1"], data["x2"])
 P_red_and_x = np.zeros(n_data)
 P_blue_and_x = np.zeros(n_data)
 
 print(f"Starting calculations for {n_data} datapoints.")
+start = timer()
+
 for i in range(n_data):
     if data["r_x"][i] < (R1_min-R2):
         P_red_and_x[i] = 0.5
         P_blue_and_x[i] = 0.5
     else:
-        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
-        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
+        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, kr, kb, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
+        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, kr, kb, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
 
 data["P_red_and_x"] = P_red_and_x
 data["P_blue_and_x"] = P_blue_and_x
@@ -272,11 +300,15 @@ data["P_x"] = data["P_red_and_x"] + data["P_blue_and_x"]
 data["P_red_given_x"] = data["P_red_and_x"]/data["P_x"]
 data["P_blue_given_x"] = data["P_blue_and_x"]/data["P_x"]
 
+
+end = timer()
+print("Time elapsed: ", timedelta(seconds=end-start))
+
 ##################################
 # Save results
 ##################################
 
 dir, filename = os.path.split(filepath)
 filename = filename.removesuffix('.csv')
-data.to_csv(f"{savefolder}/analytical_solution_{filename}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
+data.to_csv(f"{savefolder}/analytical_solution_{filename}_kr{kr}_kb{kb}_vary_a1_{vary_a1}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
 print(f"Saved output to {savefolder}/analytical_solution_{filename}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")
