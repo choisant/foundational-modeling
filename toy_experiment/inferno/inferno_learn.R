@@ -45,7 +45,6 @@ if (ntrain > 16) {
 	ncheckpoints <- 20 
 } else {ncheckpoints <- Inf}
 
-
 # Read files
 metadatafile <- args$args[1]
 traindatafile <- args$args[2]
