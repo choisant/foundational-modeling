@@ -15,7 +15,8 @@ class Robot:
                  k_red: int = 7,
                  k_blue: int = 3,
                  scale: int = 1,
-                 vary_a1: bool = False):
+                 vary_a1: bool = False,
+                 p_red: int = 0.5):
         
         self.seed = seed
         self.R2 = R2
@@ -23,10 +24,12 @@ class Robot:
         self.k_blue = k_blue
         self.scale = scale
         self.vary_a1 = vary_a1
+        self.p_red = p_red
 
     def get_parameters(self):
         return {"seed": self.seed, "R2": self.R2, "k_red": self.k_red, 
-                "k_blue": self.k_blue, "scale": self.scale, "vary_a1": self.vary_a1}
+                "k_blue": self.k_blue, "scale": self.scale, "vary_a1": self.vary_a1,
+                "p_red": self.p_red}
 
     def simulate(self, n: int = 100, mode: str = "mixed", black_box: bool = True):
         # Constants
@@ -35,6 +38,8 @@ class Robot:
         k_blue = self.k_blue
         scale = self.scale
         vary_a1 = self.vary_a1
+        p_red = self.p_red
+
         # Check arguments
         try: n = abs(int(n))
         except Exception:
@@ -46,7 +51,7 @@ class Robot:
             return None
 
         # Probability distributions
-        def sample_c(n: int): return(rng.choice(["red", "blue"], n))
+        def sample_c(n: int): return(rng.choice(["red", "blue"], n, p=[p_red, 1-p_red]))
         #def sample_a1(c: "list[str]", n: int): return(np.array([random.uniform(0, 2*np.pi) for i in range(n)]))
         def sample_a1(c: "list[str]", n: int, vary_a1: bool):
             if vary_a1:

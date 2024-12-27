@@ -1,5 +1,5 @@
 ## Choose the node to run on
-#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=1
+#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=10
 ## Name the analysis
 #PBS -N InfernoJobNdata
 ## Choose queue
@@ -7,17 +7,17 @@
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1-4
+#PBS -t 1-2
 
 #nlist=(10 40 80 120 150 200 250 300 500 900 1200 1500 1800 2100 2400 2700 3000 3300 3600)
 #nlist=(2 4 8 16 32 64 128 256 300 500 512 900 1024 1200 1500 1800 2048 2100 2400 2700 3000 4096)
-nlist=(5000 6000 7000 8000)
+nlist=(5000 8000)
 
 script="toy_experiment/inferno/inferno.R"
 metadata="toy_experiment/inferno/metadata_x1_x2.csv"
 testfile="toy_experiment/data/x1_x2_grid.csv"
-nchains=1
-ncores=1
+nchains=10
+ncores=10
 ndata=2100
 nsamples=1200
 vary_a1=False #Python variable True False
