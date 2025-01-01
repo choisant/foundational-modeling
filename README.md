@@ -1,2 +1,2 @@
-# optimal-tagger
-Project to explore how to machine learn
+# Foundational modeling
+Project where I explore data driven inference with different algorithms.

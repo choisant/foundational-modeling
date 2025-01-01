@@ -26,16 +26,18 @@ def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train=False)
         optimizer.step()
     return acc, loss
 
-def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer):
+def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, early_stopping:int=-1):
     """
     Trains the model for the number of epochs specified, using the batch size specified.
     Returns a dataframe with the stats from the training.
     """
     dataset = DataLoader(traindata, batchsize, shuffle=True)
     df_labels = ["Loss", "Accuracy", "Validation loss", "Validation accuracy", "Epoch", "Iteration"]
-    df_data = [[0], [0], [0], [0], [0], [0]]
+    df_data = [[1], [0], [1], [0], [0], [0]]
     df = pd.DataFrame(dict(zip(df_labels, df_data)))
     i = 0
+    patience = early_stopping #How many epochs to keep training if no improvement in validation loss
+    min_loss = None
     for epoch in tqdm(range(epochs)):
         for data in dataset:
             i = i+1
@@ -43,12 +45,24 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
             #print(X[0], y[0])
             acc, loss = fwd_pass_classifier(net, X, y, device, optimizer, train=True)
             #acc, loss = test(net, testdata, size=size)
-            if i % 10 == 0:
+            if i % 10 == 0: #Record every ten batches
                 val_acc, val_loss = test_classifier(net, testdata, device, optimizer, batchsize)
                 df_data = [float(loss), acc, float(val_loss), val_acc, epoch, i]
                 new_df = pd.DataFrame(dict(zip(df_labels, df_data)), index=[0])
                 df = pd.concat([df, new_df], ignore_index=True)
-            
+        if ((early_stopping > 0) and (len(df) > 1)): #If small data, we might not have validation loss yet
+            if min_loss == None:
+                min_loss = float(val_loss)
+            elif min_loss <= df["Validation loss"].min():
+                patience = patience - 1
+            elif min_loss > df["Validation loss"].min():
+                min_loss = df["Validation loss"].min()
+                patience = early_stopping # Restart early_stopping
+            if patience == 0:
+                print(f"Stopping training early at epoch {epoch}")
+                df.drop([0])
+                return df
+    df.drop([0])
     return df
 
 def test_classifier(net, data, device, optimizer, size:int = 32):

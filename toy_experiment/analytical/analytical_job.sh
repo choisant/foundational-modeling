@@ -12,8 +12,8 @@
 
 start=$((400 * $(( ${PBS_ARRAYID}-1 )) ))
 stop=$((400*${PBS_ARRAYID}))
-nX_MC=100
-nr1_MC=50
+nX_MC=200
+nr1_MC=200
 N_JOBS=25
 
 . /home/agrefsru/.bashrc

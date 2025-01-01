@@ -30,7 +30,7 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
             cbar = True, 
             square=True, 
             fmt='', 
-            cbar_kws={"format": "%.0f%%", "shrink": 0.8},
+            cbar_kws={"format": "%.0f%%", "shrink": 1.0},
             vmin=0,
             vmax=100,
             #annot_kws={"size": 24}
@@ -44,7 +44,7 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
     ax.xaxis.set_ticklabels(labels, size=12, rotation=20)
     ax.yaxis.set_ticklabels(labels, size=12, rotation=70)
     ax.tick_params(which="both", left=False, bottom=False, top=False, right=False)
-    ax.set_title(f"Validation accuracy: {int(accuracy*100)} %")
+    ax.set_title(f"Accuracy: {int(accuracy*100)} %")
     return ax
 
 ###### Plots
@@ -56,7 +56,8 @@ def red_blue_cmap():
     cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
-def plot_grid(grid_df, pred_key, ax, nx:int = 100):
+def plot_grid(grid_df, pred_key, ax, suptitle, nx:int = 100):
+    ax.set_title(suptitle)
     x1_lim = 25
     x2_lim = 25
 
@@ -70,6 +71,40 @@ def plot_grid(grid_df, pred_key, ax, nx:int = 100):
     
     ax.set_xlim(-x1_lim, x1_lim)
     ax.set_ylim(-x2_lim, x2_lim)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
+
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="major", length=6)
+    ax.set_xticks([-20, 0, 20])
+    ax.set_yticks([-20, 0, 20])
+    ax.minorticks_on()
+    ax.set_aspect('equal', adjustable='box')
+
+    return ax
+
+def plot_data(df, ax, suptitle):
+    ax.set_title(suptitle)
+    df_red = df[df["color"] == "red"]
+    sn.scatterplot(df_red, x="x1", y = "x2", c="red", alpha=0.5, ax=ax)
+    
+    df_green = df[df["color"] == "blue"]
+    sn.scatterplot(df_green, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
+    #legacy
+    df_green = df[df["color"] == "green"]
+    sn.scatterplot(df_green, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
+    
+    ax.set_xlim(-25, 25)
+    ax.set_ylim(-25, 25)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
+
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="major", length=6)
+    ax.set_xticks([-20, 0, 20])
+    ax.set_yticks([-20, 0, 20])
+    ax.set_aspect('equal', adjustable='box')
+    ax.minorticks_on()
 
     return ax
 
