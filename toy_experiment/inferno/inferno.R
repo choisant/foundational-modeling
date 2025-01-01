@@ -114,7 +114,7 @@ if (runLearn) {
 ##########################################
 if (testdatafile != "None") {
 	# Classes
-	labels <- cbind(color = c("red", "blue"))
+	labels <- cbind(class = c(0, 1))
 	nlabels <- length(labels)
 	if (polar) {
 		xvalues <- test_df[c("r_x", "a_x")]
@@ -174,7 +174,7 @@ if (testdatafile != "None") {
 	h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
 	h5createDataset(h5file, 'samples', dims = c(nlabels, nsamples_save, ntest))
 	h5createDataset(h5file, 'data', dims = c(nxvalues, ntest))
-	if ("color" %in% names(test_df)){
+	if ("class" %in% names(test_df)){
 			h5createDataset(h5file, 'truth', dims = c(ntest))
 	}
 	# Write to file
@@ -193,8 +193,8 @@ if (testdatafile != "None") {
 		h5write(t(test_df[c("x1", "x2")]),
 			file = h5file, name = 'data', index = list(NULL, NULL))
 	}
-	if ("color" %in% names(test_df)) {
-			h5write(t(test_df["color"]), file = h5file, name = 'truth',
+	if ("class" %in% names(test_df)) {
+			h5write(t(test_df["class"]), file = h5file, name = 'truth',
 					index = list(NULL))
 	}
 } else {cat("Not running any tests. \n")}

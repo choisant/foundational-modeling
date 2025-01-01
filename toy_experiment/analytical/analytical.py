@@ -42,15 +42,16 @@ def beta(x1, x2, r1, r2):
     return((x1**2+x2**2-(r1**2+r2**2))/(2*r1*r2))
 
 def theta2(x1, x2, r1, r2):
-    val = beta(x1, x2, r1, r2)
+    betaval = beta(x1, x2, r1, r2)
     # We can get some rounding errors. If they are tiny, skip them.
-    if (abs(val) > 1) and (abs(val) - 1 < 0.001):
-        if val < 0:
-            val = -1# + 0.001
-        else: val = 1# - 0.001
-    elif (abs(val) > 1) and (abs(val) - 1 > 0.001):
-        print(f"Encountered strange beta value: {val} from input x1 {x1}, x2 {x2}.")
-    return(np.arccos(val))
+    if (abs(betaval) > 1) and (abs(betaval) - 1 < 0.01):
+        if betaval < 0:
+            betaval = -1# + 0.01
+        else: betaval = 1# - 0.01
+    elif (abs(betaval) > 1) and (abs(betaval) - 1 > 0.01):
+        print(f"Encountered strange beta value: {betaval} from input x1 {x1}, x2 {x2}. Setting to closest allowed value.")
+
+    return(np.arccos(betaval))
 
 def theta1(x1, x2, r1, r2):
     #Piecewise defined
@@ -76,11 +77,11 @@ def sqrtgamma_num(x1, x2, r1, r2, dx=0.001):
     da2y = fix_difference(theta2(x1, x2+dx, r1, r2) - theta2(x1, x2, r1, r2))
     val = da1x*da2y/(dx**2) - da1y*da2x/(dx**2)
     if any(x < 0 for x in val.flatten()) == True:
-        print(f"Encountered strange sqrtgamma value: {val} from input x1 {x1}, x2 {x2}.")
+        print(f"Encountered strange sqrtgamma value: {val} from input x1 {x1}, x2 {x2}, r1 {r1}, r2 {r2}, .")
         print(da1x, da1y, da2x, da2y)
     return(abs(val))
 
-def p_r1(r1, r2, c, kr, kb):
+def p_r1(r1, R1_min, c, kr, kb):
     # Gamma distribution
     if (c == "red"):
         kc = kr
@@ -89,7 +90,7 @@ def p_r1(r1, r2, c, kr, kb):
     else:
         print("Please input valid color.")
         return None
-    z = r1 - 2*r2
+    z = r1 - R1_min
     return(kc*z**(kc - 1)*np.exp(-z)/(factorial(kc)))
 
 def p_c(c):
@@ -189,19 +190,22 @@ def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:i
     r, a = cartesian_to_polar(x1, x2)
 
     # Area is coordinate, plus/minus these values
-    dr = 0.1
+    dr = 0.05
     da = 2*np.pi/100
 
     # MC sampling
     rng = np.random.default_rng()
     n_samples = n_x_mc
     # Make sure only legal rs
-    if (r - dr > R1_min - R2):
-        r_arr  = rng.uniform(r - dr/2, r + dr/2, n_samples)
+    if (r - dr < 0):
+        # r should not be less than zero
+        r_arr  = rng.uniform(0, r + dr, n_samples)
     else:
-        # Change dr to smaller area just on the edge
-        dr = 2*(r - (R1_min - R2))
-        r_arr  = rng.uniform(r - dr/2, r + dr/2, n_samples)
+        if (r - dr > R1_min - R2):
+            r_arr  = rng.uniform(r - dr/2, r + dr/2, n_samples)
+        #Beyond undefined edge
+        else:
+            r_arr  = rng.uniform(R1_min - R2, R1_min - R2 + dr, n_samples)
 
     a_arr  = rng.uniform(a - da/2, a + da/2, n_samples)
     # If a_x is negative, wrap around to other side
@@ -220,12 +224,16 @@ def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:i
         r_n = r_arr[n]
         x1_n, x2_n = x1_arr[n], x2_arr[n]
         #print(r_n, a_n)
-        if ((R1_min - R2 <= r_n) & (r_n <= R1_min + R2)):
-            r1_min = R1_min
-            r1_max = r_n + R2
-            
+        # Is there a border?
+        if (R1_min - R2 > 0):
+            if ((R1_min - R2 <= r_n) & (r_n <= R1_min + R2)):
+                r1_min = R1_min
+                r1_max = r_n + R2
+            else:
+                r1_min = abs(r_n - R2)
+                r1_max = r_n + R2
         else:
-            r1_min = r_n - R2
+            r1_min = abs(r_n - R2)
             r1_max = r_n + R2
 
         # Integrate over all possible r1
@@ -251,7 +259,7 @@ def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:i
                 val[i] = 0
                 n_r1 = n_r1 -1
             else:
-                val[i] = p_theta1(theta1_n, c, vary_a1)*p_theta2()*p_r1(r1, R2, c, kr, kb)*sqrtgamma_num(x1_n, x2_n, r1, R2)
+                val[i] = p_theta1(theta1_n, c, vary_a1)*p_theta2()*p_r1(r1, R1_min, c, kr, kb)*sqrtgamma_num(x1_n, x2_n, r1, R2)
         
         # Potential error source
         if(n_r1 > 0):
@@ -274,10 +282,14 @@ data = data.reset_index()
 n_data = len(data)
 
 R2 = 3
-R1_min = 2*R2
-kr = 7
-kb = 3
-vary_a1 = True
+k_red = 7
+k_blue = 3
+R1_min = 6
+scale = 1
+vary_a1 = False
+vary_R2 = False #Not adapted for this yet
+p_red = 0.5
+tag = f'r2_{R2}_kr{k_red}_kb{k_blue}_r1min{R1_min}_s{scale}_vary_r2_{vary_R2}_vary_a1_{vary_a1}_pRed_{p_red}'
 
 data["r_x"], data["a_x"] = cartesian_to_polar(data["x1"], data["x2"])
 P_red_and_x = np.zeros(n_data)
@@ -287,12 +299,13 @@ print(f"Starting calculations for {n_data} datapoints.")
 start = timer()
 
 for i in range(n_data):
-    if data["r_x"][i] < (R1_min-R2):
+    #Undefined inside boundary
+    if data["r_x"][i] < (R1_min-R2): #If R1_min = 0, this is never true
         P_red_and_x[i] = 0.5
         P_blue_and_x[i] = 0.5
     else:
-        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, kr, kb, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
-        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, kr, kb, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
+        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
+        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
 
 data["P_red_and_x"] = P_red_and_x
 data["P_blue_and_x"] = P_blue_and_x
@@ -310,5 +323,5 @@ print("Time elapsed: ", timedelta(seconds=end-start))
 
 dir, filename = os.path.split(filepath)
 filename = filename.removesuffix('.csv')
-data.to_csv(f"{savefolder}/analytical_solution_{filename}_kr{kr}_kb{kb}_vary_a1_{vary_a1}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
-print(f"Saved output to {savefolder}/analytical_solution_{filename}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")
+data.to_csv(f"{savefolder}/analytical_solution_{filename}_{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
+print(f"Saved output to {savefolder}/analytical_solution_{filename}_{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-nX_MC=100
-nr1_MC=50
+nX_MC=20
+nr1_MC=20
 N_JOBS=25
-specs="kr7_kb3_vary_a1_True"
+specs="r2_7_kr15_kb5_r1min0_s1_vary_r2_False_vary_a1_False_pRed_0.5"
 
 sed -n 1p jobarrays/analytical_solution_x1_x2_grid_${specs}_nxMC_${nX_MC}_nr1MC_${nr1_MC}_jobnr1.csv > analytical_solution_x1_x2_grid_${specs}_nxMC_${nX_MC}_nr1MC_${nr1_MC}.csv
 
