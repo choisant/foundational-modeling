@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-nX_MC=20
-nr1_MC=20
+nX_MC=100
+nr1_MC=50
 N_JOBS=25
 
 R2=7

@@ -1,20 +1,45 @@
 ## Choose the node to run on
-#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=10
+#PBS -l nodes=atlas2.driftslab.hib.no-0:ppn=10
 ## Name the analysis
-#PBS -N InfernoJobCalibrate
+#PBS -N InfernoJobNchains
 ## Choose queue
 #PBS -q unlimited
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1-4
+#PBS -t 1-8
 
 #nlist=(10 40 80 120 150 200 250 300 500 900 1200 1500 1800 2100 2400 2700 3000 3300 3600)
 #nlist=(2 4 8 16 32 64 128 256 300 500 512 900 1024 1200 1500 1800 2048 2100 2400 2700 3000 4096)
-nlist=(900 2100 2700 3600)
+#nlist=(250 1000 2000 3000 4000 5000)
+nlist=(250 500 750 1000 1250 1500 1750 2000)
+#nlist=(1 2 4 8 16)
+
+script="toy_experiment/inferno/inferno_calibrate.R"
+metadata="toy_experiment/inferno/metadata_calibrate.csv"
+gridfile="toy_experiment/data/x1_x2_grid.csv"
+nchains=10
+ncores=10
+#ndata=2000
+nsamples=1200
+runLearn=TRUE #R variable TRUE FALSE
+
+R2=3
+k_red=7
+k_blue=3
+R1_min=6
+scale=1
+vary_a1=False #Python variable
+vary_R2=False #Python variable
+p_red=0.5
+
+tag="r2_${R2}_kr${k_red}_kb${k_blue}_r1min${R1_min}_s${scale}_vary_r2_${vary_R2}_vary_a1_${vary_a1}_pRed_${p_red}"
+trainfile="toy_experiment/data/train_n_50000_${tag}.csv"
+calfile="toy_experiment/DNN/predictions/${trainfile}/val_n_5000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+testfile="toy_experiment/DNN/predictions/${trainfile}/test_n_10000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+gridfile="toy_experiment/DNN/predictions/${trainfile}/grid_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+infernolib="/disk/atlas2/users/agrefsru/inferno_renegade"
 
 cd foundational-modeling
-
-apptainer run apptainer/updated_env.sif toy_experiment/inferno/inferno_calibrate.R 1000 20 10 1200 toy_experiment/inferno/metadata_DNN.csv toy_experiment/DNN/predictions/val_n_5000_kr7_kg3_s1_vary_a1_False_predicted_SequentialNet_ndata-${nlist[${PBS_ARRAYID}-1]}.csv toy_experiment/data/x1_x2_grid.csv
-apptainer run apptainer/updated_env.sif toy_experiment/inferno/inferno_test_calibrate.R 1000 20 10 1200 toy_experiment/inferno/metadata_DNN.csv toy_experiment/DNN/predictions/val_n_5000_kr7_kg3_s1_vary_a1_False_predicted_SequentialNet_ndata-${nlist[${PBS_ARRAYID}-1]}.csv toy_experiment/DNN/predictions/val_n_5000_kr7_kg3_s1_vary_a1_False_predicted_SequentialNet_ndata-${nlist[${PBS_ARRAYID}-1]}.csv
-apptainer run apptainer/updated_env.sif toy_experiment/inferno/inferno_test_calibrate.R 1000 20 10 1200 toy_experiment/inferno/metadata_DNN.csv toy_experiment/DNN/predictions/val_n_5000_kr7_kg3_s1_vary_a1_False_predicted_SequentialNet_ndata-${nlist[${PBS_ARRAYID}-1]}.csv toy_experiment/DNN/predictions/grid_predicted_SequentialNet_ndata-${nlist[${PBS_ARRAYID}-1]}.csv
+apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} ${runLearn} ${calfile} ${metadata} ${calfile}
+apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} FALSE ${gridfile} ${metadata} ${calfile}
