@@ -88,11 +88,8 @@ def plot_data(df, ax, suptitle):
     df_red = df[df["color"] == "red"]
     sn.scatterplot(df_red, x="x1", y = "x2", c="red", alpha=0.5, ax=ax)
     
-    df_green = df[df["color"] == "blue"]
-    sn.scatterplot(df_green, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
-    #legacy
-    df_green = df[df["color"] == "green"]
-    sn.scatterplot(df_green, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
+    df_blue = df[df["color"] == "blue"]
+    sn.scatterplot(df_blue, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)

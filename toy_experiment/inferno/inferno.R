@@ -65,11 +65,12 @@ if (testdatafile != "None") {
     } else {stop("Please provide a valid CSV file as test data.")}
 }
 
-# Check if polar coordinates
+
 if (is.character(metadatafile) && file.exists(metadatafile)) {
         metadata <- read.csv(metadatafile, na.strings = '')
     } else {stop("Please provide a valid CSV file as metadata.")}
 
+# Check if polar coordinates
 if (all(c("r_x", "a_x") %in% metadata[['name']])) {
 	polar <- TRUE
 } else polar <- FALSE
@@ -82,8 +83,16 @@ if (ntrain > 16) {
 # Create inference folder in same folder as metadata file
 parent_dir <- dirname(metadatafile)
 # Subfolder: traindatafile/nsamples-X_nchains-Y_ndata-Z
-inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
+if (polar) {
+	inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain, "_POLAR")
+						
+} else {
+	inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
                         "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)
+						
+}
+
 if(!dir.exists(inferno_dir) && runLearn == TRUE) {
 	cat(paste0("Creating dir ", inferno_dir, '\n'))
 	dir.create(inferno_dir, recursive=TRUE)

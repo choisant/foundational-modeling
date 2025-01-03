@@ -1,24 +1,25 @@
 ## Choose the node to run on
-#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=10
+#PBS -l nodes=atlas3.driftslab.hib.no-0
 ## Name the analysis
-#PBS -N InfernoJobNdata
+#PBS -N InfernoJobNchains
 ## Choose queue
 #PBS -q unlimited
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1-4
+#PBS -t 1-5
 
 #nlist=(10 40 80 120 150 200 250 300 500 900 1200 1500 1800 2100 2400 2700 3000 3300 3600)
 #nlist=(2 4 8 16 32 64 128 256 300 500 512 900 1024 1200 1500 1800 2048 2100 2400 2700 3000 4096)
-nlist=(250 2100 3600 5000)
+#nlist=(250 1000 2000 3000 4000 5000)
+nlist=(1 2 4 8 16)
 
 script="toy_experiment/inferno/inferno.R"
 metadata="toy_experiment/inferno/metadata_x1_x2.csv"
 gridfile="toy_experiment/data/x1_x2_grid.csv"
-nchains=10
-ncores=10
-#ndata=2100
+#nchains=10
+#ncores=10
+ndata=2000
 nsamples=1200
 
 R2=3
@@ -37,5 +38,5 @@ testfile="toy_experiment/data/val_n_5000_${tag}.csv"
 infernolib="/disk/atlas2/users/agrefsru/inferno_renegade"
 
 cd foundational-modeling
-apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} ${runLearn} ${testfile} ${metadata} ${trainfile}
-apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} FALSE ${gridfile} ${metadata} ${trainfile}
+apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${ndata} ${nlist[${PBS_ARRAYID}-1]} ${nlist[${PBS_ARRAYID}-1]} ${nsamples} ${runLearn} ${testfile} ${metadata} ${trainfile}
+apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${ndata} ${nlist[${PBS_ARRAYID}-1]} ${nlist[${PBS_ARRAYID}-1]} ${nsamples} FALSE ${gridfile} ${metadata} ${trainfile}

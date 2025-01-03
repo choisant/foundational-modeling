@@ -42,30 +42,40 @@ def beta(x1, x2, r1, r2):
     return((x1**2+x2**2-(r1**2+r2**2))/(2*r1*r2))
 
 def theta2(x1, x2, r1, r2):
-    betaval = beta(x1, x2, r1, r2)
-    # We can get some rounding errors. If they are tiny, skip them.
-    if (abs(betaval) > 1) and (abs(betaval) - 1 < 0.01):
-        if betaval < 0:
-            betaval = -1# + 0.01
-        else: betaval = 1# - 0.01
-    elif (abs(betaval) > 1) and (abs(betaval) - 1 > 0.01):
-        print(f"Encountered strange beta value: {betaval} from input x1 {x1}, x2 {x2}. Setting to closest allowed value.")
+    # betaval = beta(x1, x2, r1, r2)
+    # # We can get some rounding errors. If they are tiny, skip them.
+    # if (abs(betaval) > 1) and (abs(betaval) - 1 < 0.01):
+    #     if betaval < 0:
+    #         betaval = -1# + 0.01
+    #     else: betaval = 1# - 0.01
+    # elif (abs(betaval) > 1) and (abs(betaval) - 1 > 0.01):
+    #     print(f"Encountered strange beta value: {betaval} from input x1 {x1}, x2 {x2}. Setting to closest allowed value.")
 
-    return(np.arccos(betaval))
+    # return(np.arccos(betaval))
+
+    x = np.sqrt(x1**2 + x2**2)
+    u = abs(2*r1**2*(x**2+r2**2)-(x**2-r2**2)**2 -r1**4)
+    a2 = -2*np.arctan((np.sqrt(u))/((r1 - r2)**2 - x**2))
+
+    return a2
 
 def theta1(x1, x2, r1, r2):
     #Piecewise defined
-    a1 = np.arctan(x2/x1)-np.arctan(alpha(theta2(x1, x2, r1, r2), r1, r2))
-    a1 = np.where(x1 < 0, a1 + np.pi, a1)
+    x = np.sqrt(x1**2 + x2**2)
+    u = abs(2*r1**2*(x**2+r2**2)-(x**2-r2**2)**2 -r1**4)
+    a1 = 2*np.arctan((2*r1*x2 - np.sqrt(u))/(x**2 + r1**2 + 2*r1*x1 - r2**2))
     a1 = np.where(a1 < 0, a1 + 2*np.pi, a1)
-    if any(x < 0 for x in a1.flatten()) == True:
-        print(f"Encountered strange theta1 value: {a1} from input x1 {x1}, x2 {x2}.")
-    elif any(x > 2*np.pi for x in a1.flatten()) == True:
-        print(f"Encountered strange theta1 value: {a1} from input x1 {x1}, x2 {x2}.")
+    # a1 = np.arctan(x2/x1)-np.arctan(alpha(theta2(x1, x2, r1, r2), r1, r2))
+    # a1 = np.where(x1 < 0, a1 + np.pi, a1)
+    # a1 = np.where(a1 < 0, a1 + 2*np.pi, a1)
+    # if any(x < 0 for x in a1.flatten()) == True:
+    #     print(f"Encountered strange theta1 value: {a1} from input x1 {x1}, x2 {x2}.")
+    # elif any(x > 2*np.pi for x in a1.flatten()) == True:
+    #     print(f"Encountered strange theta1 value: {a1} from input x1 {x1}, x2 {x2}.")
     return a1
 
 
-def sqrtgamma_num(x1, x2, r1, r2, dx=0.001):
+def sqrtgamma_num(x1, x2, r1, r2, dx=0.0001):
     #Sometimes get wrong sign
     def fix_difference(da):
         da = np.where(da > np.pi, da - 2*np.pi, da)
@@ -152,6 +162,18 @@ parser.add_argument('--n_x_mc', type=int, default = 10,
 parser.add_argument('--n_r1_mc', type=int, default = 50, 
                         help="Number of Monte Carlo iterations for each integral over possible r1. Default=50.")
 
+parser.add_argument('--R2', type=int, default = 3, 
+                        help="Value of R2. Default=3.")
+
+parser.add_argument('--R1_min', type=int, default = 6, 
+                        help="Minimum value of R1. Default=6.")
+
+parser.add_argument('--kr', type=int, default = 7, 
+                        help="Mean value of R1 for class red. Default=7.")
+
+parser.add_argument('--kb', type=int, default = 3, 
+                        help="Mean value of R1 for class blue. Default=3.")
+
 # Parse arguments
 args = parser.parse_args()
 
@@ -162,6 +184,10 @@ n_r1_mc = args.n_r1_mc
 job = args.job_nr
 filepath = args.filepath
 savefolder = args.savefolder
+R2 = args.R2
+R1_min = args.R1_min
+k_red = args.kr
+k_blue = args.kb
 
 # Read data file
 data = pd.read_csv(filepath, index_col=0)
@@ -260,6 +286,8 @@ def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:i
                 n_r1 = n_r1 -1
             else:
                 val[i] = p_theta1(theta1_n, c, vary_a1)*p_theta2()*p_r1(r1, R1_min, c, kr, kb)*sqrtgamma_num(x1_n, x2_n, r1, R2)
+                if (val[i] < 0):
+                    print("Something is very wrong! Negative probability.")
         
         # Potential error source
         if(n_r1 > 0):
@@ -281,10 +309,6 @@ data = data[i_start:i_stop]
 data = data.reset_index()
 n_data = len(data)
 
-R2 = 3
-k_red = 7
-k_blue = 3
-R1_min = 6
 scale = 1
 vary_a1 = False
 vary_R2 = False #Not adapted for this yet
