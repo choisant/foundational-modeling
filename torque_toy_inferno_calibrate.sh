@@ -22,7 +22,7 @@ nchains=10
 ncores=10
 #ndata=2000
 nsamples=1200
-runLearn=TRUE #R variable TRUE FALSE
+runLearn=FALSE #R variable TRUE FALSE
 
 R2=3
 k_red=7
@@ -34,12 +34,12 @@ vary_R2=False #Python variable
 p_red=0.5
 
 tag="r2_${R2}_kr${k_red}_kb${k_blue}_r1min${R1_min}_s${scale}_vary_r2_${vary_R2}_vary_a1_${vary_a1}_pRed_${p_red}"
-trainfile="toy_experiment/data/train_n_50000_${tag}.csv"
-calfile="toy_experiment/DNN/predictions/${trainfile}/val_n_5000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
-testfile="toy_experiment/DNN/predictions/${trainfile}/test_n_10000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
-gridfile="toy_experiment/DNN/predictions/${trainfile}/grid_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+folder="train_n_50000_${tag}"
+calfile="toy_experiment/DNN/predictions/${folder}/val_n_5000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+testfile="toy_experiment/DNN/predictions/${folder}/test_n_10000_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
+gridfile="toy_experiment/DNN/predictions/${folder}/grid_${tag}_predicted_SequentialNet_10ensembles_ndata-5000.csv"
 infernolib="/disk/atlas2/users/agrefsru/inferno_renegade"
 
 cd foundational-modeling
-apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} ${runLearn} ${calfile} ${metadata} ${calfile}
+apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} ${runLearn} ${testfile} ${metadata} ${calfile}
 apptainer run --bind ${infernolib} apptainer/updated_env.sif ${script} ${nlist[${PBS_ARRAYID}-1]} ${nchains} ${ncores} ${nsamples} FALSE ${gridfile} ${metadata} ${calfile}

@@ -115,6 +115,7 @@ if (testdatafile != "None") {
 	labels <- cbind(class = c(0, 1))
 	nlabels <- length(labels)
 	xvalues <- test_df[c("Confidence_avg")]
+	nxvalues <- 1
 	ntest <- dim(xvalues)[1]
 	if (nsamples > 100) {
 		nsamples_save <- 100
@@ -164,7 +165,8 @@ if (testdatafile != "None") {
 	h5createDataset(h5file, 'probabilities', dims = c(nlabels, ntest))
 	h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
 	h5createDataset(h5file, 'samples', dims = c(nlabels, nsamples_save, ntest))
-	h5createDataset(h5file, 'data', dims = c(nxvalues, ntest))
+	h5createDataset(h5file, 'confidence', dims = c(ntest))
+	h5createDataset(h5file, 'data', dims = c(2, ntest))
 	if ("class" %in% names(test_df)){
 			h5createDataset(h5file, 'truth', dims = c(ntest))
 	}
@@ -176,8 +178,10 @@ if (testdatafile != "None") {
 			index = list(NULL, NULL, NULL))
 	h5write(condfreqs, file = h5file, name = 'samples',
 			index = list(NULL, NULL, NULL))
-        h5write(t(test_df[c("Confidence_avg")]),
-                file = h5file, name = 'data', index = list(NULL, NULL))
+	h5write(t(test_df["Confidence_avg"]), file = h5file, name = 'confidence',
+			index = list(NULL))
+	h5write(t(test_df[c("x1", "x2")]), file = h5file, name = 'data', 
+			index = list(NULL, NULL))
 	if ("class" %in% names(test_df)) {
                 h5write(t(test_df["class"]), file = h5file, name = 'truth',
                         index = list(NULL))
