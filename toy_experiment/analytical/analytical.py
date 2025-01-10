@@ -347,5 +347,6 @@ print("Time elapsed: ", timedelta(seconds=end-start))
 
 dir, filename = os.path.split(filepath)
 filename = filename.removesuffix('.csv')
-data.to_csv(f"{savefolder}/analytical_solution_{filename}_{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
-print(f"Saved output to {savefolder}/analytical_solution_{filename}_{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")
+filename = filename.replace(tag, '')
+data.to_csv(f"{savefolder}/analytical_solution_{filename}{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
+print(f"Saved output to {savefolder}/analytical_solution_{filename}{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")

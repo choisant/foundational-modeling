@@ -85,10 +85,10 @@ def plot_grid(grid_df, pred_key, ax, suptitle, nx:int = 100):
 
 def plot_data(df, ax, suptitle):
     ax.set_title(suptitle)
-    df_red = df[df["color"] == "red"]
+    df_red = df[df["class"] == 0]
     sn.scatterplot(df_red, x="x1", y = "x2", c="red", alpha=0.5, ax=ax)
     
-    df_blue = df[df["color"] == "blue"]
+    df_blue = df[df["class"] == 1]
     sn.scatterplot(df_blue, x="x1", y = "x2", c="blue", alpha=0.5, ax=ax)
     
     ax.set_xlim(-25, 25)

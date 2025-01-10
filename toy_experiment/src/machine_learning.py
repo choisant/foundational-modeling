@@ -128,7 +128,8 @@ def mc_predictions(net,
     """
     data_loader = DataLoader(testdata, batchsize, shuffle=False)
     dropout_predictions = np.empty((0, n_samples, n_classes))
-    for i in range(forward_passes):
+    print("Starting MC dropout inference: ")
+    for i in tqdm(range(forward_passes)):
         predictions = np.empty((0, n_classes))
         net.eval()
         enable_dropout(net)
@@ -157,3 +158,10 @@ def mc_predictions(net,
     #mutual_info = entropy - np.mean(np.sum(-dropout_predictions * np.log(dropout_predictions + epsilon),
     #                                       axis=-1), axis=0)  # shape (n_samples,)
     return mean, variance
+
+# Make one hot vectors
+def label_maker(values, num_classes):
+    labels = np.zeros((len(values), num_classes))
+    for i, value in enumerate(values):
+        labels[i][value] = 1
+    return torch.Tensor(labels).to(torch.int)

@@ -34,7 +34,7 @@ p_red=0.5
 tag="r2_${R2}_kr${k_red}_kb${k_blue}_r1min${R1_min}_s${scale}_vary_r2_${vary_R2}_vary_a1_${vary_a1}_pRed_${p_red}"
 runLearn=TRUE #R variable TRUE FALSE
 trainfile="toy_experiment/data/train_n_50000_${tag}.csv"
-testfile="toy_experiment/data/val_n_5000_${tag}.csv"
+testfile="toy_experiment/data/test_n_10000_${tag}.csv"
 infernolib="/disk/atlas2/users/agrefsru/inferno_renegade"
 
 cd foundational-modeling
