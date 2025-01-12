@@ -114,7 +114,7 @@ if (testdatafile != "None") {
 	# Classes
 	labels <- cbind(class = c(0, 1))
 	nlabels <- length(labels)
-	xvalues <- test_df[c("P_blue_and_x")]
+	xvalues <- test_df[c("P_blue_given_x")]
 	nxvalues <- 1
 	ntest <- dim(xvalues)[1]
 	if (nsamples > 100) {
@@ -178,7 +178,7 @@ if (testdatafile != "None") {
 			index = list(NULL, NULL, NULL))
 	h5write(condfreqs, file = h5file, name = 'samples',
 			index = list(NULL, NULL, NULL))
-	h5write(t(test_df["P_blue_and_x"]), file = h5file, name = 'confidence',
+	h5write(t(test_df["P_blue_given_x"]), file = h5file, name = 'confidence',
 			index = list(NULL))
 	h5write(t(test_df[c("x1", "x2")]), file = h5file, name = 'data', 
 			index = list(NULL, NULL))

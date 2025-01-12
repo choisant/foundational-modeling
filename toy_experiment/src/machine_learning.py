@@ -108,7 +108,8 @@ def mc_predictions(net,
                    batchsize,
                    forward_passes,
                    n_classes,
-                   n_samples):
+                   n_samples,
+                   return_samples:bool = False):
     """ Function to get the monte-carlo samples and uncertainty estimates
     through multiple forward passes
     #https://stackoverflow.com/questions/63285197/measuring-uncertainty-using-mc-dropout-on-pytorch
@@ -125,6 +126,8 @@ def mc_predictions(net,
         number of classes in the dataset
     n_samples : int
         number of samples in the test set
+    return_MCsamples : bool
+        return array of MC samples. Default false
     """
     data_loader = DataLoader(testdata, batchsize, shuffle=False)
     dropout_predictions = np.empty((0, n_samples, n_classes))
@@ -156,8 +159,12 @@ def mc_predictions(net,
 
     # Calculating mutual information across multiple MCD forward passes 
     #mutual_info = entropy - np.mean(np.sum(-dropout_predictions * np.log(dropout_predictions + epsilon),
+    # 
     #                                       axis=-1), axis=0)  # shape (n_samples,)
-    return mean, variance
+    if return_samples:
+        return mean, variance, dropout_predictions
+    else:
+        return mean, variance
 
 # Make one hot vectors
 def label_maker(values, num_classes):
