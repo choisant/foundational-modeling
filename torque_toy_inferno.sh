@@ -7,12 +7,12 @@
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1-7
+#PBS -t 1-5
 
 #nlist=(10 40 80 120 150 200 250 300 500 900 1200 1500 1800 2100 2400 2700 3000 3300 3600)
 #nlist=(2 4 8 16 32 64 128 256 300 500 512 900 1024 1200 1500 1800 2048 2100 2400 2700 3000 4096)
-#nlist=(250 1000 2000 3000 4000 5000)
-nlist=(25 50 100 125 150 200 225)
+nlist=(250 500 1000 2000 5000)
+#nlist=(25 50 100 125 150 200 225)
 
 script="toy_experiment/inferno/inferno.R"
 metadata="toy_experiment/inferno/metadata_x1_x2.csv"
@@ -20,7 +20,7 @@ gridfile="toy_experiment/data/x1_x2_grid.csv"
 nchains=10
 ncores=10
 #ndata=2000
-nsamples=1200
+nsamples=2400
 
 R2=3
 k_red=7
