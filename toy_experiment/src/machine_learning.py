@@ -39,6 +39,7 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
     patience = early_stopping #How many epochs to keep training if no improvement in validation loss
     min_loss = None
     for epoch in tqdm(range(epochs)):
+        # Iterate over batches
         for data in dataset:
             i = i+1
             X, y = data
@@ -50,6 +51,7 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
                 df_data = [float(loss), acc, float(val_loss), val_acc, epoch, i]
                 new_df = pd.DataFrame(dict(zip(df_labels, df_data)), index=[0])
                 df = pd.concat([df, new_df], ignore_index=True)
+        #Check every epoch if we should stop
         if ((early_stopping > 0) and (len(df) > 1)): #If small data, we might not have validation loss yet
             if min_loss == None:
                 min_loss = float(val_loss)

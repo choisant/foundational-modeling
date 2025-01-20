@@ -29,11 +29,11 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
             linecolor='black',
             cbar = True, 
             square=True, 
-            fmt='', 
+            fmt='',
             cbar_kws={"format": "%.0f%%", "shrink": 1.0},
             vmin=0,
             vmax=100,
-            #annot_kws={"size": 24}
+            annot_kws={"size": 14}
         )
 
     #ax.set_title('Confusion matrix\n\n', size=24)
@@ -44,7 +44,8 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
     ax.xaxis.set_ticklabels(labels, size=12, rotation=20)
     ax.yaxis.set_ticklabels(labels, size=12, rotation=70)
     ax.tick_params(which="both", left=False, bottom=False, top=False, right=False)
-    ax.set_title(f"Accuracy: {int(accuracy*100)} %")
+    acc_rounded = "{0:0.2%}".format(accuracy)
+    ax.set_title(f"Accuracy: {acc_rounded}", fontsize=14)
     return ax
 
 ###### Plots
