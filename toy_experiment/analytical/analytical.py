@@ -76,7 +76,8 @@ def theta1(x1, x2, r1, r2):
 
 
 def sqrtgamma_num(x1, x2, r1, r2, dx=0.0001):
-    #Sometimes get wrong sign
+    # Sometimes get wrong sign
+    # This is NOT a good solution lol
     def fix_difference(da):
         da = np.where(da > np.pi, da - 2*np.pi, da)
         da = np.where(da < -np.pi, da + 2*np.pi, da)
@@ -157,8 +158,6 @@ parser.add_argument('--i_start', type=int, default = 0,
 parser.add_argument('--i_stop', type=int, default = -1, 
                         help="Which line in the input file to stop at. Default=-1.")
 
-parser.add_argument('--n_x_mc', type=int, default = 10, 
-                        help="Number of Monte Carlo iterations in area around each datapoint. Default=10.")
 parser.add_argument('--n_r1_mc', type=int, default = 50, 
                         help="Number of Monte Carlo iterations for each integral over possible r1. Default=50.")
 
@@ -179,7 +178,6 @@ args = parser.parse_args()
 
 i_start = args.i_start
 i_stop = args.i_stop
-n_x_mc = args.n_x_mc
 n_r1_mc = args.n_r1_mc
 job = args.job_nr
 filepath = args.filepath
@@ -210,97 +208,81 @@ if (i_stop > n_data):
 # Main function
 ##################################
 
-def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_x_mc:int = 10, n_r1_mc:int = 50):
-    # Define area of x to integrate over
-    # Easiest to define it in polar coordinates because of limits in r1 integral
+def P_c_and_x(c, x1, x2, R2, R1_min, kr, kb, vary_a1, n_r1_mc:int = 50):
+    #Polar coordinates
     r, a = cartesian_to_polar(x1, x2)
-
-    # Area is coordinate, plus/minus these values
-    dr = 0.05
-    da = 2*np.pi/100
-
+    
     # MC sampling
     rng = np.random.default_rng()
-    n_samples = n_x_mc
+    
     # Make sure only legal rs
-    if (r - dr < 0):
+    if (r < 0):
         # r should not be less than zero
-        r_arr  = rng.uniform(0, r + dr, n_samples)
-    else:
-        if (r - dr > R1_min - R2):
-            r_arr  = rng.uniform(r - dr/2, r + dr/2, n_samples)
+        sys.exit("Negative radius?!")
+    
+    if (r < R1_min - R2):
         #Beyond undefined edge
+        return 0.5
+
+    ## Different r1 limits if at the edge of the gamma distribution
+
+    # Is there an undefined inner area?
+    if (R1_min - R2 > 0):
+        if ((R1_min - R2 <= r) & (r <= R1_min + R2)):
+            #r within 2*R2 of edge
+            r1_min = R1_min
+            r1_max = r + R2
         else:
-            r_arr  = rng.uniform(R1_min - R2, R1_min - R2 + dr, n_samples)
+            #No special criteria outside 2*R2 og edge
+            r1_min = abs(r - R2)
+            r1_max = r + R2
+    else:
+        #If r - R2 is negative, r1 can't be less than |r-R2|
+        r1_min = abs(r - R2)
+        r1_max = r + R2
 
-    a_arr  = rng.uniform(a - da/2, a + da/2, n_samples)
-    # If a_x is negative, wrap around to other side
-    a_arr = np.where(a_arr < 0, a_arr + 2*np.pi, a_arr)
-
-    # Convert back to cartesian coordinates
-    x1_arr, x2_arr = polar_to_cartesian(r_arr, a_arr)
-
-    # Integrate over area
-    # Integral = Sum/Number of MC samples
-    sum_integral_x = 0
-
-    #print(f"Starting MC sampling in range {min(r_arr), max(r_arr)}, {min(a_arr), max(a_arr)}.")
-    for n in range(n_samples):
-        # Different r1 limits if at the edge of the gamma distribution
-        r_n = r_arr[n]
-        x1_n, x2_n = x1_arr[n], x2_arr[n]
-        #print(r_n, a_n)
-        # Is there a border?
-        if (R1_min - R2 > 0):
-            if ((R1_min - R2 <= r_n) & (r_n <= R1_min + R2)):
-                r1_min = R1_min
-                r1_max = r_n + R2
-            else:
-                r1_min = abs(r_n - R2)
-                r1_max = r_n + R2
+    # Integrate over all possible r1
+    n_r1 = n_r1_mc
+    # Crude Monte Carlo sampling
+    r1_arr  = rng.uniform(r1_min, r1_max, n_r1)
+    MC_samples = np.zeros(n_r1)
+    for i, r1 in enumerate(r1_arr):
+        theta1_i = theta1(x1, x2, r1, R2)
+        theta2_i = theta2(x1, x2, r1, R2)
+        # Skip if values are too close to theta1 = (0, 2pi), theta2 = (0, pi)
+        # Because the numerical derivative in gamma hits it. Derivative is in x1, x2,
+        # So this is not trivial, as r increases, we will have more issues.
+        # Can be solved by analytical gamma.
+        # Edit n_r1 to match skipping
+        if theta1_i < 0.01:
+            MC_samples[i] = 0
+            n_r1 = n_r1 -1
+        elif (2*np.pi - theta1_i ) < 0.01:
+            MC_samples[i] = 0
+            n_r1 = n_r1 -1
+        elif theta2_i < 0.01:
+            MC_samples[i] = 0
+            n_r1 = n_r1 -1
+        elif (np.pi - theta2_i ) < 0.01:
+            MC_samples[i] = 0
+            n_r1 = n_r1 -1
         else:
-            r1_min = abs(r_n - R2)
-            r1_max = r_n + R2
+            MC_samples[i] = p_theta1(theta1_i, c, vary_a1)*p_theta2()*p_r1(r1, R1_min, c, kr, kb)*sqrtgamma_num(x1, x2, r1, R2)
+            if (MC_samples[i] < 0):
+                print("Something is very wrong! Negative probability.")
+    
+    if(n_r1 > 0):
+            # MC approximation
+            dr1 = (r1_max - r1_min)/n_r1
+            # Hopefully this function is ok for summing small and large numbers
+            integral_r1 = math.fsum(MC_samples)*dr1
+    else: 
+        # Not sure if setting the integral to 0.5 if all r1 samples were invalid makes sense?
+        integral_r1 = 0.5
+    
+    integral = p_c(c)*integral_r1
 
-        # Integrate over all possible r1
-        # Very simple approximation to r1 integral for now
-        n_r1 = n_r1_mc
-        r1_arr  = rng.uniform(r1_min, r1_max, n_r1)
-        val = np.zeros(n_r1)
-        for i, r1 in enumerate(r1_arr):
-            theta1_n = theta1(x1_n, x2_n, r1, R2)
-            theta2_n = theta2(x1_n, x2_n, r1, R2)
-            # Skip if values are too close to undefined edge
-            # Edit n_r1 to match skipping
-            if theta1_n < 0.01:
-                val[i] = 0
-                n_r1 = n_r1 -1
-            elif (2*np.pi - theta1_n ) < 0.01:
-                val[i] = 0
-                n_r1 = n_r1 -1
-            elif theta2_n < 0.01:
-                val[i] = 0
-                n_r1 = n_r1 -1
-            elif (np.pi - theta2_n ) < 0.01:
-                val[i] = 0
-                n_r1 = n_r1 -1
-            else:
-                val[i] = p_theta1(theta1_n, c, vary_a1)*p_theta2()*p_r1(r1, R1_min, c, kr, kb)*sqrtgamma_num(x1_n, x2_n, r1, R2)
-                if (val[i] < 0):
-                    print("Something is very wrong! Negative probability.")
-        
-        # Potential error source
-        if(n_r1 > 0):
-                dr1 = (r1_max - r1_min)/n_r1
-                integral_r1 = math.fsum(val)*dr1
-        else: 
-            integral_r1 = 0
-        
-        sum_integral_x = sum_integral_x + integral_r1
-    # Is this how it works?
-    integral_x = (4*r*dr*da/n_samples)*p_c(c)*sum_integral_x
-
-    return integral_x
+    return integral
 
 ##################################
 # Program
@@ -328,8 +310,8 @@ for i in range(n_data):
         P_red_and_x[i] = 0.5
         P_blue_and_x[i] = 0.5
     else:
-        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
-        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_x_mc = n_x_mc, n_r1_mc = n_r1_mc)
+        P_red_and_x[i] = P_c_and_x("red", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_r1_mc = n_r1_mc)
+        P_blue_and_x[i] = P_c_and_x("blue", data["x1"][i], data["x2"][i], R2, R1_min, k_red, k_blue, vary_a1, n_r1_mc = n_r1_mc)
 
 data["P_red_and_x"] = P_red_and_x
 data["P_blue_and_x"] = P_blue_and_x
@@ -348,5 +330,5 @@ print("Time elapsed: ", timedelta(seconds=end-start))
 dir, filename = os.path.split(filepath)
 filename = filename.removesuffix('.csv')
 filename = filename.replace(tag, '')
-data.to_csv(f"{savefolder}/analytical_solution_{filename}{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
-print(f"Saved output to {savefolder}/analytical_solution_{filename}{tag}_nxMC_{n_x_mc}_nr1MC_{n_r1_mc}_jobnr{job}.csv")
+data.to_csv(f"{savefolder}/analytical_solution_{filename}_{tag}_nr1MC_{n_r1_mc}_jobnr{job}.csv", index=False)
+print(f"Saved output to {savefolder}/analytical_solution_{filename}{tag}_nr1MC_{n_r1_mc}_jobnr{job}.csv")
