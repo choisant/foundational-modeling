@@ -106,6 +106,92 @@ def plot_data(df, ax, suptitle):
 
     return ax
 
+def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False):
+    ax.set_title(suptitle)
+    cmap = red_blue_cmap()
+    
+    if grid:
+        ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
+                bins = 100,
+                norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
+                cmap=cmap)
+    else:
+    
+        if error_key == None:
+            sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
+                        hue_norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
+                            palette=cmap, legend=False)
+        else:
+            sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
+                        size=error_key, size_norm = (0.1, 0.2), sizes=(10, 200),
+                            hue_norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
+                            palette=cmap, legend=False)
+    
+    ax.set_xlim(-25, 25)
+    ax.set_ylim(-25, 25)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
+
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="major", length=6)
+    ax.set_xticks([-20, 0, 20])
+    ax.set_yticks([-20, 0, 20])
+    ax.set_aspect('equal', adjustable='box')
+    ax.minorticks_on()
+    return ax
+
+def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle):
+    #Assume my truthfile format
+    ax.set_title(suptitle)
+    #Absolute value
+    df_pred["Diff_truth"] = abs(df_pred[pred_key] - df_truth[truth_key])
+    
+    #sn.scatterplot(data = df_pred, x="x1", y="x2", ax = ax, hue="Diff_truth", 
+    #                palette="dark:#5A9_r", legend=False)
+    ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
+                bins = 100,
+                #norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
+                )
+    
+    ax.set_xlim(-25, 25)
+    ax.set_ylim(-25, 25)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
+
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="major", length=6)
+    ax.set_xticks([-20, 0, 20])
+    ax.set_yticks([-20, 0, 20])
+    ax.set_aspect('equal', adjustable='box')
+    ax.minorticks_on()
+    return ax
+
+def plot_std(df, pred_key, ax, suptitle, grid=False):
+    ax.set_title(suptitle)
+    
+    if grid:
+        ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
+                bins = 100,
+                norm = mpl.colors.Normalize(vmin=0, vmax=0.3, clip=False))
+    else:
+
+        sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
+                    hue_norm = mpl.colors.Normalize(vmin=0, vmax=0.3, clip=False),
+                        legend=False)
+    
+    ax.set_xlim(-25, 25)
+    ax.set_ylim(-25, 25)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
+
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="major", length=6)
+    ax.set_xticks([-20, 0, 20])
+    ax.set_yticks([-20, 0, 20])
+    ax.set_aspect('equal', adjustable='box')
+    ax.minorticks_on()
+    return ax
+
 
 ##### Misc math
 
