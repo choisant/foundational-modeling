@@ -57,6 +57,8 @@ def red_blue_cmap():
     cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
     return cmap
 
+
+
 def plot_grid(grid_df, pred_key, ax, suptitle, nx:int = 100):
     ax.set_title(suptitle)
     x1_lim = 25
@@ -150,7 +152,8 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle):
     #                palette="dark:#5A9_r", legend=False)
     ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
                 bins = 100,
-                #norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
+                norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
+                cmap='inferno'
                 )
     
     ax.set_xlim(-25, 25)
@@ -172,12 +175,14 @@ def plot_std(df, pred_key, ax, suptitle, grid=False):
     if grid:
         ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
                 bins = 100,
-                norm = mpl.colors.Normalize(vmin=0, vmax=0.3, clip=False))
+                norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
+                cmap="inferno")
     else:
 
         sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
-                    hue_norm = mpl.colors.Normalize(vmin=0, vmax=0.3, clip=False),
-                        legend=False)
+                    hue_norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
+                    palette="inferno",
+                    legend=False)
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
