@@ -49,6 +49,14 @@ def plot_conf_matrix(df, truthkey, predkey, labels, ax):
     return ax
 
 ###### Plots
+def pink_black_green_cmap():
+    #c = ["#b2182b","#ef8a62","#fddbc7", "#d9d9d9", "#d1e5f0","#67a9cf","#2166ac"]
+    c = ["#fdb7e0","#000000","#d4f48d"]
+    v = [0,.5,1.]
+    l = list(zip(v,c))
+    cmap = LinearSegmentedColormap.from_list('rg',l, N=256)
+    return cmap
+
 def red_blue_cmap():
     #c = ["#b2182b","#ef8a62","#fddbc7", "#d9d9d9", "#d1e5f0","#67a9cf","#2166ac"]
     c = ["#a50026","#d73027","#fdae61", "#f7f7f7", "#abd9e9","#4575b4","#313695"]
@@ -142,18 +150,18 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False):
     ax.minorticks_on()
     return ax
 
-def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle):
+def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5):
     #Assume my truthfile format
     ax.set_title(suptitle)
     #Absolute value
-    df_pred["Diff_truth"] = abs(df_pred[pred_key] - df_truth[truth_key])
+    df_pred["Diff_truth"] = df_pred[pred_key] - df_truth[truth_key]
     
     #sn.scatterplot(data = df_pred, x="x1", y="x2", ax = ax, hue="Diff_truth", 
     #                palette="dark:#5A9_r", legend=False)
     ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
                 bins = 100,
-                norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
-                cmap='inferno'
+                norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
+                cmap=pink_black_green_cmap()
                 )
     
     ax.set_xlim(-25, 25)
@@ -169,18 +177,18 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle):
     ax.minorticks_on()
     return ax
 
-def plot_std(df, pred_key, ax, suptitle, grid=False):
+def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5):
     ax.set_title(suptitle)
     
     if grid:
         ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
                 bins = 100,
-                norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
+                norm = mpl.colors.Normalize(vmin=0, vmax=max_val, clip=False),
                 cmap="inferno")
     else:
 
         sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
-                    hue_norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=False),
+                    hue_norm = mpl.colors.Normalize(vmin=0, vmax=max_val, clip=False),
                     palette="inferno",
                     legend=False)
     
