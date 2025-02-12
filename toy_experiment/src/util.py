@@ -78,7 +78,7 @@ def plot_grid(grid_df, pred_key, ax, suptitle, nx:int = 100):
     ax.hist2d(x= grid_df["x1"], y= grid_df["x2"], weights=grid_df[pred_key], 
                 bins = nx,
                 norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
-                cmap=cmap)
+                cmap=cmap, rasterized=True, edgecolor='face')
     
     ax.set_xlim(-x1_lim, x1_lim)
     ax.set_ylim(-x2_lim, x2_lim)
@@ -124,7 +124,7 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False):
         ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
                 bins = 100,
                 norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
-                cmap=cmap)
+                cmap=cmap, rasterized=True, edgecolor='face')
     else:
     
         if error_key == None:
@@ -161,7 +161,7 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5)
     ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
                 bins = 100,
                 norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
-                cmap=pink_black_green_cmap()
+                cmap=pink_black_green_cmap(), rasterized=True, edgecolor='face'
                 )
     
     ax.set_xlim(-25, 25)
@@ -184,7 +184,7 @@ def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5):
         ax.hist2d(x= df["x1"], y=df["x2"], weights=df[pred_key], 
                 bins = 100,
                 norm = mpl.colors.Normalize(vmin=0, vmax=max_val, clip=False),
-                cmap="inferno")
+                cmap="inferno", rasterized=True, edgecolor='face')
     else:
 
         sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
