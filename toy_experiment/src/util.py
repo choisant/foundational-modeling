@@ -6,6 +6,17 @@ import matplotlib as mpl
 from  matplotlib.colors import LinearSegmentedColormap
 import pandas as pd
 import seaborn as sn
+import torch
+
+from torchmetrics.classification import BinaryCalibrationError
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from scipy.stats import wasserstein_distance
+from sklearn.metrics import roc_auc_score as roc_auc_score
+from scipy.special import kl_div as kl_div
+from sklearn.metrics import log_loss as log_loss
+
 
 
 def plot_conf_matrix(df, truthkey, predkey, labels, ax):
@@ -157,7 +168,7 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5)
     df_pred["Diff_truth"] = df_pred[pred_key] - df_truth[truth_key]
     
     #sn.scatterplot(data = df_pred, x="x1", y="x2", ax = ax, hue="Diff_truth", 
-    #                palette="dark:#5A9_r", legend=False)
+    #                palette="dark:#5A9_r", legend=False, linewidth=0)
     ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
                 bins = 100,
                 norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
@@ -190,7 +201,7 @@ def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5):
         sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
                     hue_norm = mpl.colors.Normalize(vmin=0, vmax=max_val, clip=False),
                     palette="inferno",
-                    legend=False)
+                    legend=False, linewidth=0)
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
@@ -224,3 +235,39 @@ def cartesian_to_polar_df(df, x_key, y_key, r_key, theta_key):
     mask2 = df_copy[theta_key] < 0
     df.loc[mask2, theta_key] = df[theta_key] + 2*np.pi
     return df
+
+#### Metrics
+
+def calculate_metrics(test_dfs, grid_dfs, n_data, truth_data, truth_test_data, pred_key, prob_key, error_key):
+    keys = ["N data"]
+    scores = pd.DataFrame(columns=keys)
+    scores["N data"] = n_data
+    n_plots = len(n_data)
+    scores["ACC"] = [accuracy_score(test_dfs[i]["class"], test_dfs[i][pred_key], normalize=True) for i in range(n_plots)]
+    scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"], test_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["WD test"] = [wasserstein_distance(truth_test_data["P_blue_given_x"], test_dfs[i][prob_key]) for i in range(len(n_data))]
+    scores["WD grid"] = [wasserstein_distance(truth_data["P_blue_given_x"], grid_dfs[i][prob_key]) for i in range(len(n_data))]
+    scores["Avg UE"] = [test_dfs[i][error_key].mean() for i in range(n_plots)]
+    scores["Std UE"] = [test_dfs[i][error_key].std() for i in range(n_plots)]
+    scores["Mean KL-div test"] = [kl_div(truth_test_data["P_blue_given_x"], test_dfs[i][prob_key]).mean() for i in range(len(n_data))]
+    scores["Mean KL-div grid"] = [kl_div(truth_data["P_blue_given_x"], grid_dfs[i][prob_key]).mean() for i in range(len(n_data))]
+    scores["LogLoss"] = [log_loss(test_dfs[i]["class"], test_dfs[i][prob_key]) for i in range(len(n_data))]
+
+    ece = np.zeros(len(n_data))
+    mce = np.zeros(len(n_data))
+    rmsce = np.zeros(len(n_data))
+
+    for i in range(len(n_data)):
+        preds = torch.Tensor(test_dfs[i][prob_key])
+        target = torch.Tensor(test_dfs[i]["class"])
+        bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
+        ece[i] = bce_l1(preds, target).item()
+        bce_l2 = BinaryCalibrationError(n_bins=15, norm='l2')
+        rmsce[i] = bce_l2(preds, target).item()
+        bce_max = BinaryCalibrationError(n_bins=15, norm='max')
+        mce[i] = bce_max(preds, target).item()
+
+    scores["ECE"] = ece
+    scores["MCE"] = mce
+    scores["RMSCE"] = rmsce
+    return scores

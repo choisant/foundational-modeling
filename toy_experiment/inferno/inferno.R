@@ -134,7 +134,7 @@ if (testdatafile != "None") {
 
 	ntest <- dim(xvalues)[1]
 	if (nsamples > 100) {
-		nsamples_save <- 100
+		nsamples_save <- nsamples
 	} else {nsamples_save <- nsamples}
 
 	starttime <- Sys.time()
