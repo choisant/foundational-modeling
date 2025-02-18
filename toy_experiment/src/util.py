@@ -150,8 +150,8 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False):
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
-    ax.set_xlabel(r"x$_1$", fontsize=14)
-    ax.set_ylabel(r"x$_2$", fontsize=14)
+    #ax.set_xlabel(r"x$_1$", fontsize=14)
+    #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
@@ -177,8 +177,8 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5)
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
-    ax.set_xlabel(r"x$_1$", fontsize=14)
-    ax.set_ylabel(r"x$_2$", fontsize=14)
+    #ax.set_xlabel(r"x$_1$", fontsize=14)
+    #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
@@ -205,8 +205,8 @@ def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5):
     
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
-    ax.set_xlabel(r"x$_1$", fontsize=14)
-    ax.set_ylabel(r"x$_2$", fontsize=14)
+    #ax.set_xlabel(r"x$_1$", fontsize=14)
+    #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)

@@ -173,6 +173,9 @@ parser.add_argument('--kr', type=int, default = 7,
 parser.add_argument('--kb', type=int, default = 3, 
                         help="Mean value of R1 for class blue. Default=3.")
 
+parser.add_argument('--varya1', type=bool, default = False, 
+                        help="Vary a1. Default=False.")
+
 # Parse arguments
 args = parser.parse_args()
 
@@ -186,6 +189,7 @@ R2 = args.R2
 R1_min = args.R1_min
 k_red = args.kr
 k_blue = args.kb
+vary_a1 = args.varya1
 
 # Read data file
 data = pd.read_csv(filepath, index_col=0)
@@ -292,7 +296,6 @@ data = data.reset_index()
 n_data = len(data)
 
 scale = 1
-vary_a1 = False
 vary_R2 = False #Not adapted for this yet
 p_red = 0.5
 tag = f'r2_{R2}_kr{k_red}_kb{k_blue}_r1min{R1_min}_s{scale}_vary_r2_{vary_R2}_vary_a1_{vary_a1}_pRed_{p_red}'

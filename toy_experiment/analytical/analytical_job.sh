@@ -24,7 +24,7 @@ k_red=7
 k_blue=3
 R1_min=6
 scale=1
-vary_a1=False #Python variable
+vary_a1=True #Python variable
 vary_R2=False #Python variable
 p_red=0.5
 
@@ -35,4 +35,5 @@ gridfile="../data/x1_x2_grid.csv"
 . /home/agrefsru/.bashrc
 cd foundational-modeling/toy_experiment/analytical
 conda activate imcal
-python analytical.py -f ${testfile} -s "jobarrays" --job_nr ${PBS_ARRAYID} --i_start $start --i_stop $stop --n_r1_mc ${nr1_MC} --R2 ${R2} --R1_min ${R1_min} --kr ${k_red} --kb ${k_blue}
+python analytical.py -f ${testfile} -s "jobarrays" --job_nr ${PBS_ARRAYID} --i_start $start --i_stop $stop --n_r1_mc ${nr1_MC} --R2 ${R2} --R1_min ${R1_min} --kr ${k_red} --kb ${k_blue} --varya1 ${vary_a1}
+python analytical.py -f ${gridfile} -s "jobarrays" --job_nr ${PBS_ARRAYID} --i_start $start --i_stop $stop --n_r1_mc ${nr1_MC} --R2 ${R2} --R1_min ${R1_min} --kr ${k_red} --kb ${k_blue} --varya1 ${vary_a1}
