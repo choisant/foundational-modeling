@@ -1,0 +1,1 @@
+analytical_solution_x1_x2_grid_kr7_kb3_vary_a1_False_nxMC_100_nr1MC_50_jobnr23 <- approximately 25 mins per 400 datapoints
