@@ -22,11 +22,12 @@ ncores=10
 ndata=${nlist[${PBS_ARRAYID}-1]}
 nsamples=1200
 
-R2=3
-k_red=7
-k_blue=3
-R1_min=6
-scale=1
+shapes = (2 2)
+scales = (5 3]
+k = len(scales) # Number of classes
+d = 2 # Number of dimensions
+p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
+
 vary_a1=False #Python variable
 vary_R2=False #Python variable
 p_red=0.5

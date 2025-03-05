@@ -17,7 +17,11 @@ from sklearn.metrics import roc_auc_score as roc_auc_score
 from scipy.special import kl_div as kl_div
 from sklearn.metrics import log_loss as log_loss
 
-
+def label_maker(values, num_classes):
+    labels = np.zeros((len(values), num_classes))
+    for i, value in enumerate(values):
+        labels[i][value] = 1
+    return torch.Tensor(labels).to(torch.int)
 
 def plot_conf_matrix(df, truthkey, predkey, labels, ax):
     """
@@ -155,25 +159,34 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False, rmax:fl
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax, 0, rmax])
-    ax.set_yticks([-rmax, 0, rmax])
+    ax.set_xticks([-rmax+5, 0, rmax-5])
+    ax.set_yticks([-rmax+5, 0, rmax-5])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax
 
-def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5, rmax:float=25.0, bins:int=100):
+def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5, rmax:float=25.0, bins:int=100, absolute=False):
     #Assume my truthfile format
     ax.set_title(suptitle)
-    #Absolute value
+    #Difference
     df_pred["Diff_truth"] = df_pred[pred_key] - df_truth[truth_key]
+    #Absolute difference
+    df_pred["Diff_truth_abs"] = np.abs(df_pred[pred_key] - df_truth[truth_key])
     
     #sn.scatterplot(data = df_pred, x="x1", y="x2", ax = ax, hue="Diff_truth", 
     #                palette="dark:#5A9_r", legend=False, linewidth=0)
-    ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
-                bins = bins,
-                norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
-                cmap=pink_black_green_cmap(), rasterized=True, edgecolor='face'
-                )
+    if absolute:
+        ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth_abs"], 
+                    bins = bins,
+                    norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
+                    cmap="inferno", rasterized=True, edgecolor='face'
+                    )
+    else:
+        ax.hist2d(x=df_pred["x1"], y=df_pred["x2"], weights=df_pred["Diff_truth"], 
+                    bins = bins,
+                    norm = mpl.colors.Normalize(vmin=-max_val, vmax=max_val, clip=False),
+                    cmap=pink_black_green_cmap(), rasterized=True, edgecolor='face'
+                    )
     
     ax.set_xlim(-rmax, rmax)
     ax.set_ylim(-rmax, rmax)
@@ -182,8 +195,8 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5,
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax, 0, rmax])
-    ax.set_yticks([-rmax, 0, rmax])
+    ax.set_xticks([-rmax+5, 0, rmax-5])
+    ax.set_yticks([-rmax+5, 0, rmax-5])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax
@@ -210,8 +223,8 @@ def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5, rmax:float=25.
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax, 0, rmax])
-    ax.set_yticks([-rmax, 0, rmax])
+    ax.set_xticks([-rmax+5, 0, rmax-5])
+    ax.set_yticks([-rmax+5, 0, rmax-5])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax

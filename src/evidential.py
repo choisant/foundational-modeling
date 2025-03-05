@@ -9,6 +9,7 @@ import torchbnn as bnn
 
 from tqdm import tqdm
 import pandas as pd
+#https://github.com/clabrugere/evidential-deeplearning/tree/main
 
 
 class TypeIIMaximumLikelihoodLoss(nn.Module):
@@ -92,10 +93,12 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
         net.train()
         net.zero_grad()
     outputs = net(X.to(device))
-    evidences = F.softplus(outputs)
+    #evidences = F.softplus(outputs)
+    evidences = outputs
     matches = [torch.argmax(i) == torch.argmax(j) for i, j in zip(outputs, y)]
     acc = matches.count(True)/len(matches)
-    annealing_coef = min(0.5, epoch / max_epoch)
+    annealing_coef = min(1, epoch / max_epoch)/10
+    #coef=0.001
     bayes_risk = SSBayesRiskLoss()
     br = bayes_risk(evidences, y.to(device)).to(device)
     kld_loss = KLDivergenceLoss()
@@ -175,17 +178,23 @@ def predict_evidential_classifier(net, testdata, num_classes:int, size:int, devi
     alphas = torch.zeros((len(dataset), size, num_classes))
     strength = torch.zeros((len(dataset), size, num_classes))
     probabilities = torch.zeros((len(dataset), size, num_classes))
+    uncertainties = torch.zeros((len(dataset), size, num_classes))
     i = 0
     net.eval()
     with torch.no_grad():
         for data in tqdm(dataset):
             X, y = data
             logits[i] = net(X.to(device))
-            evidences[i] = F.softplus(logits[i])
+            evidences[i] = logits[i] #F.softplus(logits[i])
             alphas[i] = evidences[i] + 1.0
-            strength[i] = torch.sum(alphas[i], dim=-1, keepdim=True)
+            strength[i] = torch.sum(alphas[i], dim=-1, keepdim=True) #Summing can go wrong
             probabilities[i] = alphas[i] / strength[i]
+            if (probabilities[i].max() > 1 or probabilities[i].max() < 0):
+                print("Something is wrong!")
+                print("alphas: ", alphas)
+                print("Strength: ", strength)
+            uncertainties[i] = torch.sqrt(probabilities[i]*(1-probabilities[i])/(strength[i]+1))
             i = i+1
     total_uncertainty = num_classes / strength
     beliefs = evidences / strength
-    return probabilities.view(-1, num_classes), total_uncertainty.view(-1, num_classes), beliefs.view(-1, num_classes)
+    return probabilities.view(-1, num_classes), uncertainties.view(-1, num_classes), beliefs.view(-1, num_classes)

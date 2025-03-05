@@ -1,7 +1,7 @@
 ## Choose the node to run on
 #PBS -l nodes=atlas3.driftslab.hib.no-0
 ## Name the analysis
-#PBS -N MonteCarloComputations
+#PBS -N DNN ensemble
 ## Choose queue
 #PBS -q unlimited
 ## Concat output files
