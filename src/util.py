@@ -274,6 +274,7 @@ def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, tru
     scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["Mean KL-div grid"] = [kl_div(truth_data[truth_prob_key], grid_dfs[i][prob_key]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
+    scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
 
     ece = np.zeros(len(n_data))
     mce = np.zeros(len(n_data))

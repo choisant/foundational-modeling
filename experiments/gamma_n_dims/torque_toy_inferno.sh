@@ -1,5 +1,5 @@
 ## Choose the node to run on
-#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=5
+#PBS -l nodes=atlas3.driftslab.hib.no-0:ppn=10
 ## Name the analysis
 #PBS -N InfernoJobNchains
 ## Choose queue
@@ -7,15 +7,15 @@
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1
+#PBS -t 1-7
 
-nlist=(10000)
+nlist=(250 500 1000 2000 3000 4000 5000)
 
 script="experiments/gamma_n_dims/inferno/inferno.R"
 metadata="experiments/gamma_n_dims/inferno/metadata_x1_x2.csv"
 
-nchains=5
-ncores=5
+nchains=10
+ncores=10
 ndata=${nlist[${PBS_ARRAYID}-1]}
 nsamples=1200
 
