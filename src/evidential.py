@@ -11,6 +11,8 @@ from tqdm import tqdm
 import pandas as pd
 #https://github.com/clabrugere/evidential-deeplearning/tree/main
 
+from edl_pytorch import Dirichlet, evidential_classification
+
 
 class TypeIIMaximumLikelihoodLoss(nn.Module):
     def __init__(self, *args, **kwargs):
@@ -85,7 +87,7 @@ class KLDivergenceLoss(nn.Module):
         return loss
     
 
-def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, batchsize:int, epoch:int, max_epoch, train:bool=False):
+def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, batchsize:int, epoch:int, max_epoch, train:bool=False, Teddy:bool=False):
     """
     This function controls the machine learning steps, depending on if we are in training mode or not.
     """
@@ -103,14 +105,18 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
     br = bayes_risk(evidences, y.to(device)).to(device)
     kld_loss = KLDivergenceLoss()
     kld = annealing_coef*kld_loss(evidences, y.to(device)).to(device)
-    loss = br + kld
+
+    if Teddy:
+        loss = evidential_classification(outputs, y.to(device), lamb=annealing_coef)
+    else:
+        loss = br + kld
     
     if train:
         loss.backward()
         optimizer.step()
     return acc, loss, br, kld
 
-def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, early_stopping:int=-1):
+def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, early_stopping:int=-1, Teddy:bool=False):
     """
     Trains the model for the number of epochs specified, using the batch size specified.
     Returns a dataframe with the stats from the training.
@@ -153,7 +159,7 @@ def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:
     df.drop([0])
     return df
 
-def test_evidential_classifier(net, data, device, optimizer, batchsize:int, epoch, max_epoch, size:int = 32):
+def test_evidential_classifier(net, data, device, optimizer, batchsize:int, epoch, max_epoch, size:int = 32, Teddy:bool=False):
     """
     Calculates the accuracy and the loss of the model for a random batch.
     """
@@ -163,12 +169,13 @@ def test_evidential_classifier(net, data, device, optimizer, batchsize:int, epoc
     val_acc, val_loss, val_br, val_kld = fwd_pass_evidential_classifier(net, X, y, device, optimizer, batchsize, epoch, max_epoch, train=False)
     return val_acc, val_loss, val_br, val_kld
     
-def predict_evidential_classifier(net, testdata, num_classes:int, size:int, device):
+def predict_evidential_classifier(net, testdata, num_classes:int, size:int, device, Teddy:bool=False):
     """
     Calculates the accuracy and the loss of the model in testing mode.
     If return_loss is True, it will return the loss for each datapoint.
     It can also return the softmax values of the raw output from the model.
     Does not shuffle the data.
+    Teddy produces the alphas directly.
     """
     assert len(testdata)%size==0, "Please choose batch size so that testdata%size==0."
 
@@ -184,9 +191,12 @@ def predict_evidential_classifier(net, testdata, num_classes:int, size:int, devi
     with torch.no_grad():
         for data in tqdm(dataset):
             X, y = data
-            logits[i] = net(X.to(device))
-            evidences[i] = logits[i] #F.softplus(logits[i])
-            alphas[i] = evidences[i] + 1.0
+            if Teddy:
+                alphas[i] = net(X.to(device))
+            else:
+                logits[i] = net(X.to(device))
+                evidences[i] = logits[i] #F.softplus(logits[i])
+                alphas[i] = evidences[i] + 1.0
             strength[i] = torch.sum(alphas[i], dim=-1, keepdim=True) #Summing can go wrong
             probabilities[i] = alphas[i] / strength[i]
             if (probabilities[i].max() > 1 or probabilities[i].max() < 0):
@@ -197,4 +207,7 @@ def predict_evidential_classifier(net, testdata, num_classes:int, size:int, devi
             i = i+1
     total_uncertainty = num_classes / strength
     beliefs = evidences / strength
-    return probabilities.view(-1, num_classes), uncertainties.view(-1, num_classes), beliefs.view(-1, num_classes)
+    if Teddy:
+        return probabilities.view(-1, num_classes), uncertainties.view(-1, num_classes)
+    else:
+        return probabilities.view(-1, num_classes), uncertainties.view(-1, num_classes), beliefs.view(-1, num_classes)

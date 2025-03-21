@@ -252,6 +252,7 @@ def cartesian_to_polar_df(df, x_key, y_key, r_key, theta_key):
 #### Metrics
 
 def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
+
     keys = ["N data"]
     scores = pd.DataFrame(columns=keys)
     
@@ -268,11 +269,11 @@ def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, tru
     scores["ACC"] = [accuracy_score(test_dfs[i]["class"][0:n_max], test_dfs[i][pred_key][0:n_max], normalize=True) for i in range(n_plots)]
     scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
     scores["WD test"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
-    scores["WD grid"] = [wasserstein_distance(truth_data[truth_prob_key], grid_dfs[i][prob_key]) for i in range(len(n_data))]
+    scores["WD grid"] = [wasserstein_distance(truth_data[truth_prob_key][0:n_max], grid_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Avg UE"] = [test_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
     scores["Std UE"] = [test_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
     scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
-    scores["Mean KL-div grid"] = [kl_div(truth_data[truth_prob_key], grid_dfs[i][prob_key]).mean() for i in range(len(n_data))]
+    scores["Mean KL-div grid"] = [kl_div(truth_data[truth_prob_key][0:n_max], grid_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
 
@@ -281,8 +282,8 @@ def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, tru
     rmsce = np.zeros(len(n_data))
 
     for i in range(len(n_data)):
-        preds = torch.Tensor(test_dfs[i][prob_key])
-        target = torch.Tensor(test_dfs[i]["class"])
+        preds = torch.Tensor(test_dfs[i][prob_key][0:n_max])
+        target = torch.Tensor(test_dfs[i]["class"][0:n_max])
         bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
         ece[i] = bce_l1(preds, target).item()
         bce_l2 = BinaryCalibrationError(n_bins=15, norm='l2')
