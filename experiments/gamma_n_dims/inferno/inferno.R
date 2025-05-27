@@ -23,6 +23,7 @@ hyperparams = list(
         Lshapelo = 0.5,
         Lshapehi = 0.5,
         Lvarm1 = 3^2,
+		# Bayes-Laplace prior for Bernoulli distribution
         Bshapelo = 1,
         Bshapehi = 1,
         Dthreshold = 1

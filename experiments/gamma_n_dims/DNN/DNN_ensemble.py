@@ -58,18 +58,23 @@ p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
 
 tag = f'k_{k}_d{d}_shapes{shapes}_scales{scales}_pc{p_c}'.replace(" ", "")
 
+
 # Read files
 train_n = 50000
 trainfile = f"train_n_{train_n}_{tag}"
 valfile = f"val_n_5000_{tag}"
 testfile = f"test_n_10000_{tag}"
 gridfile = f"grid_x1_x2_10000_{tag}"
+large_gridfile = f"grid_r_a1_10000_{tag}"
 
 train_data = pd.read_csv(f"../data/{trainfile}.csv")
 val_data = pd.read_csv(f"../data/{valfile}.csv")
 test_data = pd.read_csv(f"../data/{testfile}.csv")
 grid_data = pd.read_csv(f"../data/{gridfile}.csv")
+large_grid_data = pd.read_csv(f"../data/{large_gridfile}.csv")
+
 grid_rmax = grid_data["x1"].max()
+large_grid_rmax = large_grid_data["r"].max()
 
 X_train = torch.Tensor(np.dstack((train_data[x1_key], train_data[x2_key]))).to(torch.float32)[0]
 Y_train = label_maker(train_data["class"], 2)
@@ -83,16 +88,21 @@ Y_test = label_maker(test_data["class"], 2)
 X_grid = torch.Tensor(np.dstack((grid_data[x1_key], grid_data[x2_key]))).to(torch.float32)[0]
 Y_grid = torch.zeros(X_grid.shape)
 
+X_large_grid = torch.Tensor(np.dstack((large_grid_data[x1_key], large_grid_data[x2_key]))).to(torch.float32)[0]
+Y_large_grid = torch.zeros(X_large_grid.shape)
+
 # Create datasets for pytorch
 val_dataset = torch.utils.data.TensorDataset(X_val, Y_val)
 test_dataset = torch.utils.data.TensorDataset(X_test, Y_test)
 grid_dataset = torch.utils.data.TensorDataset(X_grid, Y_grid)
+large_grid_dataset = torch.utils.data.TensorDataset(X_large_grid, Y_large_grid)
 
 
 def train_ensemble(n_ensemble, n_train, batchsize):
     val_df = pd.read_csv(f"../data/{valfile}.csv")
     test_df = pd.read_csv(f"../data/{testfile}.csv")
     grid_df = pd.read_csv(f"../data/{gridfile}.csv")
+    large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
     # Timer
     start = timer()
     print(f"Starting training of {n_ensemble} ensembles with {n_train} training points.")
@@ -120,6 +130,12 @@ def train_ensemble(n_ensemble, n_train, batchsize):
         preds_test = torch.argmax(logits_test, dim=-1).flatten()
         test_df[f"Prediction_{i}"] = preds_test
         test_df[f"Confidence_{i}"] = torch.softmax(logits_test, dim=-1)[:,1] #Get softmax score for blue
+
+        # Predict for grid
+        truth_grid, logits_grid = predict_classifier(model, grid_dataset, 2, 100, device)
+        preds_grid = torch.argmax(logits_grid, dim=-1).flatten()
+        grid_df[f"Prediction_{i}"] = preds_grid
+        grid_df[f"Confidence_{i}"] = torch.softmax(logits_grid, dim=-1)[:,1] #Get softmax score for blue
 
         # Predict for grid
         truth_grid, logits_grid = predict_classifier(model, grid_dataset, 2, 100, device)

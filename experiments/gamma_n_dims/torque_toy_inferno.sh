@@ -7,24 +7,25 @@
 ## Concat output files
 #PBS -j oe
 ## Array of jobs
-#PBS -t 1-7
+#PBS -t 1
 
-nlist=(250 500 1000 2000 3000 4000 5000)
+#nlist=(250 500 1000 2000 3000 5000)
+nlist=(10000)
 
 script="experiments/gamma_n_dims/inferno/inferno.R"
 metadata="experiments/gamma_n_dims/inferno/metadata_x1_x2.csv"
 
-nchains=10
-ncores=10
+nchains=5
+ncores=5
 ndata=${nlist[${PBS_ARRAYID}-1]}
 nsamples=1200
 
 tag="k_2_d2_shapes[2,6]_scales[5,3]_pc[0.5,0.5]"
-runLearn=TRUE #R variable TRUE FALSE
+runLearn=FALSE #R variable TRUE FALSE
 trainfile="experiments/gamma_n_dims/data/train_n_50000_${tag}.csv"
 testfile="experiments/gamma_n_dims/data/test_n_10000_${tag}.csv"
 gridfile="experiments/gamma_n_dims/data/grid_x1_x2_10000_${tag}.csv"
 
 cd foundational-modeling
-apptainer run apptainer/robot_inferno.sif ${script} ${ndata} ${nchains} ${ncores} ${nsamples} ${runLearn} ${testfile} ${metadata} ${trainfile}
+#apptainer run apptainer/robot_inferno.sif ${script} ${ndata} ${nchains} ${ncores} ${nsamples} ${runLearn} ${testfile} ${metadata} ${trainfile}
 apptainer run apptainer/robot_inferno.sif ${script} ${ndata} ${nchains} ${ncores} ${nsamples} FALSE ${gridfile} ${metadata} ${trainfile}

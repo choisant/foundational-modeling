@@ -87,7 +87,8 @@ class KLDivergenceLoss(nn.Module):
         return loss
     
 
-def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, batchsize:int, epoch:int, max_epoch, train:bool=False, Teddy:bool=False):
+def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, batchsize:int, epoch:int, max_epoch:int, 
+                                   annealing_coef:float, train:bool=False, Teddy:bool=False):
     """
     This function controls the machine learning steps, depending on if we are in training mode or not.
     """
@@ -99,12 +100,13 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
     evidences = outputs
     matches = [torch.argmax(i) == torch.argmax(j) for i, j in zip(outputs, y)]
     acc = matches.count(True)/len(matches)
-    annealing_coef = min(1, epoch / max_epoch)/10
+    annealing_val = (epoch / max_epoch)*annealing_coef
+    
     #coef=0.001
-    bayes_risk = SSBayesRiskLoss()
+    bayes_risk = CEBayesRiskLoss()
     br = bayes_risk(evidences, y.to(device)).to(device)
     kld_loss = KLDivergenceLoss()
-    kld = annealing_coef*kld_loss(evidences, y.to(device)).to(device)
+    kld = annealing_val*kld_loss(evidences, y.to(device)).to(device)
 
     if Teddy:
         loss = evidential_classification(outputs, y.to(device), lamb=annealing_coef)
@@ -116,7 +118,8 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
         optimizer.step()
     return acc, loss, br, kld
 
-def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, early_stopping:int=-1, Teddy:bool=False):
+def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, 
+                                annealing_coef:float, early_stopping:int=-1, Teddy:bool=False):
     """
     Trains the model for the number of epochs specified, using the batch size specified.
     Returns a dataframe with the stats from the training.
@@ -133,9 +136,11 @@ def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:
         for data in dataset:
             i = i+1
             X, y = data
-            acc, loss, br, kld = fwd_pass_evidential_classifier(net, X, y, device, optimizer, batchsize, epoch, max_epoch=epochs, train=True)
+            acc, loss, br, kld = fwd_pass_evidential_classifier(net, X, y, device, optimizer, batchsize, 
+                                                                epoch, max_epoch=epochs, annealing_coef=annealing_coef, train=True)
             if i % 10 == 0: #Record every ten batches
-                val_acc, val_loss, val_br, val_kld = test_evidential_classifier(net, testdata, device, optimizer, batchsize, epoch, max_epoch=epochs, size=batchsize)
+                val_acc, val_loss, val_br, val_kld = test_evidential_classifier(net, testdata, device, optimizer, batchsize, 
+                                                                                epoch, max_epoch=epochs, annealing_coef=annealing_coef)
                 df_data = [float(loss), acc, float(br), float(kld), float(val_loss), val_acc, float(val_br), float(val_kld), epoch, i]
                 if df_created == False:
                     df = pd.DataFrame(dict(zip(df_labels, df_data)), index=[0])
@@ -159,14 +164,17 @@ def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:
     df.drop([0])
     return df
 
-def test_evidential_classifier(net, data, device, optimizer, batchsize:int, epoch, max_epoch, size:int = 32, Teddy:bool=False):
+def test_evidential_classifier(net, data, device, optimizer, batchsize:int, epoch:int, max_epoch:int, 
+                               annealing_coef:float, Teddy:bool=False):
     """
     Calculates the accuracy and the loss of the model for a random batch.
     """
     net.eval()
-    dataset = DataLoader(data, size, shuffle=True) #shuffle data and choose batch size
+    dataset = DataLoader(data, batchsize, shuffle=True) #shuffle data and choose batch size
     X, y = next(iter(dataset)) #get a random batch
-    val_acc, val_loss, val_br, val_kld = fwd_pass_evidential_classifier(net, X, y, device, optimizer, batchsize, epoch, max_epoch, train=False)
+    val_acc, val_loss, val_br, val_kld = fwd_pass_evidential_classifier(net, X, y, device, optimizer, batchsize, 
+                                                                        epoch, max_epoch=max_epoch, annealing_coef=annealing_coef, 
+                                                                        train=False)
     return val_acc, val_loss, val_br, val_kld
     
 def predict_evidential_classifier(net, testdata, num_classes:int, size:int, device, Teddy:bool=False):
@@ -189,18 +197,19 @@ def predict_evidential_classifier(net, testdata, num_classes:int, size:int, devi
     i = 0
     net.eval()
     with torch.no_grad():
-        for data in tqdm(dataset):
+        for data in dataset:
             X, y = data
             if Teddy:
                 alphas[i] = net(X.to(device))
             else:
                 logits[i] = net(X.to(device))
-                evidences[i] = logits[i] #F.softplus(logits[i])
+                evidences[i] = F.softplus(logits[i])
                 alphas[i] = evidences[i] + 1.0
             strength[i] = torch.sum(alphas[i], dim=-1, keepdim=True) #Summing can go wrong
             probabilities[i] = alphas[i] / strength[i]
             if (probabilities[i].max() > 1 or probabilities[i].max() < 0):
                 print("Something is wrong!")
+                print(f"Found probability with value {probabilities[i].max()}.")
                 print("alphas: ", alphas)
                 print("Strength: ", strength)
             uncertainties[i] = torch.sqrt(probabilities[i]*(1-probabilities[i])/(strength[i]+1))

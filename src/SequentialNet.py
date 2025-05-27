@@ -4,7 +4,7 @@ class SequentialNet(nn.Module):
 
     def __init__(self, activation:str, in_channels:int, out_channels:int, L: int = 1024, 
                  n_hidden:int = 1, p:float = 0):
-        assert activation in ["relu", "tanh", "sigmoid"], "should be a a valid activation function"
+        assert activation in ["relu", "tanh", "sigmoid", "leakyrelu"], "should be a a valid activation function"
         super().__init__()
         
         layers = []
@@ -18,6 +18,8 @@ class SequentialNet(nn.Module):
                 layers.append(nn.Tanh())
             elif activation == "sigmoid":
                 layers.append(nn.Sigmoid())
+            elif activation == "leakyrelu":
+                layers.append(nn.LeakyReLU())
         self.hidden_layers = nn.Sequential(*layers)
         self.first_layer = nn.Linear(in_channels, L)
         self.last_layer = nn.Linear(L, out_channels)

@@ -12,9 +12,10 @@ import pandas as pd
 import numpy as np
 import sys
 
-def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train:bool=False, biased_class:int=-1):
+def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train:bool=False, biased_class:int=-1, bias_weight:float=0.1):
     """
     This function controls the machine learning steps, depending on if we are in training mode or not.
+    biased_class = -1 gives clean cross entropy without conflictual loss term
     """
     if train:
         net.train()
@@ -26,7 +27,7 @@ def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train:bool=F
     if biased_class == -1:
         loss = F.cross_entropy(outputs, torch.argmax(y,dim=-1).to(device)) 
     else:
-        weight = 1/10
+        weight = bias_weight
         ce_loss = F.cross_entropy(outputs, torch.argmax(y,dim=-1).to(device))
         biased_class_labels = label_maker([int(biased_class)]*len(outputs), 2).to(device)
         #torch.Tensor([biased_class]*len(outputs)).to(torch.int).to(device)
@@ -37,7 +38,8 @@ def fwd_pass_classifier(net, X:Tensor, y:Tensor, device, optimizer, train:bool=F
         optimizer.step()
     return acc, loss
 
-def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, early_stopping:int=-1, biased_class:int=-1, mcd:bool=False):
+def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device, optimizer, 
+                     early_stopping:int=-1, biased_class:int=-1, bias_weight:float=0.1, mcd:bool=False):
     """
     Trains the model for the number of epochs specified, using the batch size specified.
     Returns a dataframe with the stats from the training.
@@ -54,10 +56,12 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
             i = i+1
             X, y = data
             #print(X[0], y[0])
-            acc, loss = fwd_pass_classifier(net, X, y, device, optimizer, train=True, biased_class=biased_class)
+            acc, loss = fwd_pass_classifier(net, X, y, device, optimizer, train=True, 
+                                            biased_class=biased_class, bias_weight=bias_weight)
             #acc, loss = test(net, testdata, size=size)
             if i % 10 == 0: #Record every ten batches
-                val_acc, val_loss = test_classifier(net, testdata, device, optimizer, batchsize, biased_class=biased_class, mcd=mcd)
+                val_acc, val_loss = test_classifier(net, testdata, device, optimizer, batchsize, 
+                                                    biased_class=biased_class, bias_weight=bias_weight, mcd=mcd)
                 df_data = [float(loss), acc, float(val_loss), val_acc, epoch, i]
                 if df_created == False:
                     df = pd.DataFrame(dict(zip(df_labels, df_data)), index=[0])
@@ -81,7 +85,8 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
     df.drop([0])
     return df
 
-def test_classifier(net, data, device, optimizer, size:int = 32, biased_class:int=-1, mcd:bool=False):
+def test_classifier(net, data, device, optimizer, size:int = 32, biased_class:int=-1, 
+                    bias_weight:float=0.1, mcd:bool=False):
     """
     Calculates the accuracy and the loss of the model for a random batch.
     """
@@ -90,7 +95,8 @@ def test_classifier(net, data, device, optimizer, size:int = 32, biased_class:in
         enable_dropout(net)
     dataset = DataLoader(data, size, shuffle=True) #shuffle data and choose batch size
     X, y = next(iter(dataset)) #get a random batch
-    val_acc, val_loss = fwd_pass_classifier(net, X, y, device, optimizer, train=False, biased_class=biased_class)
+    val_acc, val_loss = fwd_pass_classifier(net, X, y, device, optimizer, train=False, 
+                                            biased_class=biased_class, bias_weight=bias_weight)
     return val_acc, val_loss
     
 def predict_classifier(net, testdata, num_classes:int, size:int, device):
@@ -108,7 +114,7 @@ def predict_classifier(net, testdata, num_classes:int, size:int, device):
     i = 0
     net.eval()
     with torch.no_grad():
-        for data in tqdm(dataset):
+        for data in dataset:
             X, y = data
             logits[i] = net(X.to(device))
             truth[i] = torch.argmax(y, dim=-1).to(torch.int)
@@ -122,6 +128,7 @@ def enable_dropout(net):
             m.train()
 
 def mc_predictions(net,
+                   device,
                    testdata,
                    batchsize,
                    forward_passes,
@@ -155,7 +162,7 @@ def mc_predictions(net,
         net.eval()
         enable_dropout(net)
         for i, (X, y) in enumerate(data_loader):
-            X = X.to(torch.device('cuda'))
+            X = X.to(device)
             with torch.no_grad():
                 output = net(X)
                 output = torch.softmax(output, dim=-1)
