@@ -11,4 +11,4 @@
 . /home/agrefsru/.bashrc
 cd foundational-modeling/experiments/gamma_n_dims/DNN
 conda activate imcal
-python DNN_evidential.py
+python DNN_CL.py

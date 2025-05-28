@@ -41,32 +41,36 @@ device = (
 print(f"Using {device} device {torch.cuda.get_device_name(1)}")
 
 # Machine learning option
+ALGORITHM_NAME = "evidential"
 VARY_HYPERPARAMS = True # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
-n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
-bs_list = [128, 128, 128, 128*2, 1024, 1024, 1024*2] #Batchsize
 
 # SGD options
 if VARY_HYPERPARAMS == False:
+    n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
+    bs_list = [128, 128, 256, 256, 1024, 1024, 1024*2] #Batchsize
     n_runs = 10
-    lr = 0.001
+    lr = 0.0001
     weight_decay = 0.01
-    annealing_coef = 0.1 #Constant multiplier for KL div term
-    SAVE_PREDS = False #Don't save predictions for hyperparam search mode
+    annealing_coef = 0.2 #Constant multiplier for KL div term
+    n_nodes = 200
+    n_layers = 3
+    SAVE_PREDS = True
 else:
     n_runs = 5
-    SAVE_PREDS = True
+    SAVE_PREDS = False #Don't save predictions for hyperparam search mode
     hyperparams = {
         "lr" : [0.01, 0.001, 0.0001],
         "weight_decay" : [0.1, 0.01, 0.001],
-        "annealing_coef" : [0.01, 0.1, 1],
+        "annealing_coef" : [0.02, 0.2, 2],
         "layers" : [1, 3, 8]
     }
-    n_train = n_data[2]
-    batchsize = bs_list[2]
+    n_data = [250, 1000, 5000]
+    bs_list = [128, 256, 1024]
+
 patience = 20 # For early stopping
-epochs = 100 #Affects annealing constant, don't change
+epochs = 200 #Affects annealing constant, don't change
 
 # Data constants
 shapes = [2, 6]
@@ -147,17 +151,19 @@ Start training
 if VARY_HYPERPARAMS == False:
     test_dfs = [0]*len(n_data)
     grid_dfs = [0]*len(n_data)
+    large_grid_dfs = [0]*len(n_data)
 
     for i in range(len(n_data)):
         logloss_min = 1
         test_dfs[i] = pd.read_csv(f"../data/{testfile}.csv")
         grid_dfs[i] = pd.read_csv(f"../data/{gridfile}.csv")
+        large_grid_dfs[i] = pd.read_csv(f"../data/{large_gridfile}.csv")
         for j in tqdm(range(n_runs)):
             val_df = pd.read_csv(f"../data/{valfile}.csv")
             n_train = n_data[i]
             batchsize = bs_list[i]
 
-            model = SequentialNet(L=200, n_hidden=3, activation="relu", in_channels=2, out_channels=2).to(device)
+            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
 
             optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
             train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
@@ -182,6 +188,10 @@ if VARY_HYPERPARAMS == False:
                 print(f"New best values: n_train = {n_data[i]}, logloss={ll}, ECE= {ece}")
                 logloss_min = ll
 
+                test_dfs[i] = pd.read_csv(f"../data/{testfile}.csv")
+                grid_dfs[i] = pd.read_csv(f"../data/{gridfile}.csv")
+                large_grid_dfs[i] = pd.read_csv(f"../data/{large_gridfile}.csv")
+
                 probs_test, uncertainties_test, beliefs_test = predict_evidential_classifier(model, test_dataset, 2, 100, device)
                 preds_test = torch.argmax(probs_test, dim=-1).flatten()
                 test_dfs[i]["Prediction"] = preds_test
@@ -196,110 +206,125 @@ if VARY_HYPERPARAMS == False:
                 grid_dfs[i]["Std_prob_c1"] = uncertainties_grid[:,1]
                 grid_dfs[i]["Beliefs"] = beliefs_grid[:,1]
 
+                probs_large_grid, uncertainties_large_grid, beliefs_large_grid = predict_evidential_classifier(model, large_grid_dataset, 2, 100, device)
+                preds_large_grid = torch.argmax(probs_large_grid, dim=-1).flatten()
+                large_grid_dfs[i]["Prediction"] = preds_grid
+                large_grid_dfs[i]["Est_prob_c1"] = probs_grid[:,1] #Get probability score for blue
+                large_grid_dfs[i]["Std_prob_c1"] = uncertainties_grid[:,1]
+                large_grid_dfs[i]["Beliefs"] = beliefs_grid[:,1]
+
             # Save best prediction
         if (not os.path.isdir(f"predictions/{trainfile}") ):
             os.mkdir(f"predictions/{trainfile}")
-        if (not os.path.isdir(f"predictions/{trainfile}/evidential") ):
-            os.mkdir(f"predictions/{trainfile}/evidential")
-        test_dfs[i].to_csv(f"predictions/{trainfile}/evidential/{testfile}_ndata-{n_data[i]}.csv")
-        grid_dfs[i].to_csv(f"predictions/{trainfile}/evidential/grid_{tag}_ndata-{n_data[i]}.csv")
+        if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
+            os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
+        test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
+        grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
+        large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
 
 
 else:
     print("Starting hyperparameter search")
-    train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+    start = timer()
     # Run more times for statistics
     for j in range(n_runs):
-        df_run = create_df(n_train, hyperparams)
-        metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
-                       "Std UQ", "Min UQ", "Max UQ",
-                       "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
-                       "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
-        for key in metric_keys:
-            df_run[key] = None
-        print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
-        # Run once for each hyperparameter combination
-        for i in range(len(df_run)):
-            val_df = pd.read_csv(f"../data/{valfile}.csv")
-            large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
-            
-            # Get parameters
-            lr = df_run["lr"].values[i]
-            weight_decay = df_run["weight_decay"].values[i]
-            n_layers = int(df_run["layers"].values[i])
-            n_nodes = int(df_run["nodes"].values[i])
-            annealing_coef = df_run["annealing_coef"].values[i]
-            
-            # Initialize model and optimizer
-            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
-            optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-            
-            # Train model
-            training_results = train_evidential_classifier(model, train_dataset, 
-                                    val_dataset, batchsize=batchsize, epochs = epochs, 
-                                    device = device, optimizer = optimizer, 
-                                    annealing_coef=annealing_coef, early_stopping=patience)
-            # Evaluate on validation set
-            est_probs_val, uncertainties_val, beliefs_val = predict_evidential_classifier(model, val_dataset, 2, 100, device)
-            preds_val = torch.argmax(est_probs_val, dim=-1).flatten()
-            val_df["Prediction"] = preds_val
-            val_df["Est_prob_c1"] = est_probs_val[:,1] #Get probability score for blue
-            val_df["Std_prob_c1"] = uncertainties_val[:,1]
-            
-            len_nan = len(val_df[val_df.isnull().any(axis=1)])
-            if (len_nan < len(val_df)):
-                if len_nan > 0:
-                    print(f"Dropping {len_nan} rows of NaNs from validation file")
-                    val_df = val_df.dropna()
-                # Make them tensors (might be redundant)
-                est_probs = torch.Tensor(val_df["Est_prob_c1"])
-                pred_class = torch.Tensor(val_df["Prediction"])
-                target = torch.Tensor(val_df["class"])
-                truth_probs = torch.Tensor(val_df["p_c1_given_r"])
+        # Run once per dataset per run
+        for k in range(len(n_data)):
+            n_train = n_data[k]
+            batchsize = bs_list[k]
+            df_run = create_df(n_train, hyperparams)
+            train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+            metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
+                        "Std UQ", "Min UQ", "Max UQ",
+                        "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
+                        "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
+            for key in metric_keys:
+                df_run[key] = None
+            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
+            # Run once for each hyperparameter combination
+            for i in range(len(df_run)):
+                val_df = pd.read_csv(f"../data/{valfile}.csv")
+                large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
+                
+                # Get parameters
+                lr = df_run["lr"].values[i]
+                weight_decay = df_run["weight_decay"].values[i]
+                n_layers = int(df_run["layers"].values[i])
+                n_nodes = int(df_run["nodes"].values[i])
+                annealing_coef = df_run["annealing_coef"].values[i]
+                
+                # Initialize model and optimizer
+                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
+                optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+                
+                # Train model
+                training_results = train_evidential_classifier(model, train_dataset, 
+                                        val_dataset, batchsize=batchsize, epochs = epochs, 
+                                        device = device, optimizer = optimizer, 
+                                        annealing_coef=annealing_coef, early_stopping=patience)
+                # Evaluate on validation set
+                est_probs_val, uncertainties_val, beliefs_val = predict_evidential_classifier(model, val_dataset, 2, 100, device)
+                preds_val = torch.argmax(est_probs_val, dim=-1).flatten()
+                val_df["Prediction"] = preds_val
+                val_df["Est_prob_c1"] = est_probs_val[:,1] #Get probability score for blue
+                val_df["Std_prob_c1"] = uncertainties_val[:,1]
+                
+                len_nan = len(val_df[val_df.isnull().any(axis=1)])
+                if (len_nan < len(val_df)):
+                    if len_nan > 0:
+                        print(f"Dropping {len_nan} rows of NaNs from validation file")
+                        val_df = val_df.dropna()
+                    # Make them tensors (might be redundant)
+                    est_probs = torch.Tensor(val_df["Est_prob_c1"])
+                    pred_class = torch.Tensor(val_df["Prediction"])
+                    target = torch.Tensor(val_df["class"])
+                    truth_probs = torch.Tensor(val_df["p_c1_given_r"])
 
-                # Calculate metrics
-                ll = log_loss(target, est_probs)
-                df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
-                df_run.loc[i, "LogLoss"] = ll
-                bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
-                ece = bce_l1(est_probs, target).item()
-                df_run.loc[i, "ECE"] = ece
-                df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
-                df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
-                df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
+                    # Calculate metrics
+                    ll = log_loss(target, est_probs)
+                    df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
+                    df_run.loc[i, "LogLoss"] = ll
+                    bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
+                    ece = bce_l1(est_probs, target).item()
+                    df_run.loc[i, "ECE"] = ece
+                    df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
+                    df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
+                    df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
 
-                # Evaluate on large grid
-                est_probs_large_grid, uncertainties_large_grid, beliefs_large_grid = predict_evidential_classifier(model, 
-                    large_grid_dataset, 2, 100, device)
-                preds_large_grid = torch.argmax(est_probs_large_grid, dim=-1).flatten()
-                large_grid_df["Prediction"] = preds_large_grid
-                large_grid_df["Est_prob_c1"] = est_probs_large_grid[:,1] #Get probability score for blue
-                large_grid_df["Std_prob_c1"] = uncertainties_large_grid[:,1]
+                    # Evaluate on large grid
+                    est_probs_large_grid, uncertainties_large_grid, beliefs_large_grid = predict_evidential_classifier(model, 
+                        large_grid_dataset, 2, 100, device)
+                    preds_large_grid = torch.argmax(est_probs_large_grid, dim=-1).flatten()
+                    large_grid_df["Prediction"] = preds_large_grid
+                    large_grid_df["Est_prob_c1"] = est_probs_large_grid[:,1] #Get probability score for blue
+                    large_grid_df["Std_prob_c1"] = uncertainties_large_grid[:,1]
 
-                large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
+                    large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
 
-                df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
-                df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
-                df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
-                df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
+                    df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
+                    df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
+                    df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
+                    df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
 
-                df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
+                    df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
-                # Save for every line, in case something goes wrong
-                if (not os.path.isdir(f"gridsearch") ):
-                    os.mkdir(f"gridsearch")
-                if (not os.path.isdir(f"gridsearch/{trainfile}") ):
-                    os.mkdir(f"gridsearch/{trainfile}")
-                if (not os.path.isdir(f"gridsearch/{trainfile}/evidential") ):
-                    os.mkdir(f"gridsearch/{trainfile}/evidential")
-                df_run.to_csv(f"gridsearch/{trainfile}/evidential/results_run{j}.csv")
-            else:
-                print("WTF is going on here?? Skipping these")
-                print(df_run.loc[i])
-                print(val_df["Est_prob_c1"])
+                    # Save for every line, in case something goes wrong
+                    if (not os.path.isdir(f"gridsearch") ):
+                        os.mkdir(f"gridsearch")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}") ):
+                        os.mkdir(f"gridsearch/{trainfile}")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
+                        os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}.csv")
+                else:
+                    print("WTF is going on here?? Skipping these")
+                    print(df_run.loc[i])
+                    print(val_df["Est_prob_c1"])
+    end = timer()
+    print("Grid search time: ", timedelta(seconds=end-start))
