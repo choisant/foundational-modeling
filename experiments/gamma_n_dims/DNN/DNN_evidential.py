@@ -58,23 +58,23 @@ if VARY_HYPERPARAMS == False:
     n_layers = 3
     SAVE_PREDS = True
 else:
-    n_runs = 5
+    n_runs = 20
     SAVE_PREDS = False #Don't save predictions for hyperparam search mode
     hyperparams = {
         "lr" : [0.01, 0.001, 0.0001],
         "weight_decay" : [0.1, 0.01, 0.001],
-        "annealing_coef" : [0.02, 0.2, 2],
+        "annealing_coef" : [0.0002, 0.002, 0.02],
         "layers" : [1, 3, 8]
     }
     n_data = [250, 1000, 5000]
     bs_list = [128, 256, 1024]
 
 patience = 20 # For early stopping
-epochs = 200 #Affects annealing constant, don't change
+epochs = 200
 
 # Data constants
-shapes = [2, 6]
-scales = [5, 3]
+shapes = [2, 4]
+scales = [3, 3]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -226,6 +226,7 @@ if VARY_HYPERPARAMS == False:
 else:
     print("Starting hyperparameter search")
     start = timer()
+    errors = 0
     # Run more times for statistics
     for j in range(n_runs):
         # Run once per dataset per run
@@ -242,7 +243,8 @@ else:
                 df_run[key] = None
             print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
             # Run once for each hyperparameter combination
-            for i in range(len(df_run)):
+            i = 0
+            while i < len(df_run):
                 val_df = pd.read_csv(f"../data/{valfile}.csv")
                 large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
                 
@@ -321,10 +323,13 @@ else:
                         os.mkdir(f"gridsearch/{trainfile}")
                     if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
                         os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}.csv")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    i = i + 1
                 else:
                     print("WTF is going on here?? Skipping these")
                     print(df_run.loc[i])
                     print(val_df["Est_prob_c1"])
     end = timer()
+    print("Finsihed evidential deep learning grid search")
     print("Grid search time: ", timedelta(seconds=end-start))
+    print("Total nr of errors caught: ", errors)

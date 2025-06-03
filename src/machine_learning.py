@@ -130,7 +130,6 @@ def enable_dropout(net):
 def mc_predictions(net,
                    device,
                    testdata,
-                   batchsize,
                    forward_passes,
                    n_classes,
                    n_samples,
@@ -154,14 +153,14 @@ def mc_predictions(net,
     return_MCsamples : bool
         return array of MC samples. Default false
     """
-    data_loader = DataLoader(testdata, batchsize, shuffle=False)
+    data_loader = DataLoader(testdata, n_samples, shuffle=False)
     dropout_predictions = np.empty((0, n_samples, n_classes))
     print("Starting MC dropout inference: ")
     for i in tqdm(range(forward_passes)):
         predictions = np.empty((0, n_classes))
         net.eval()
         enable_dropout(net)
-        for i, (X, y) in enumerate(data_loader):
+        for i, (X, y) in enumerate(data_loader): #Just one "batch"
             X = X.to(device)
             with torch.no_grad():
                 output = net(X)

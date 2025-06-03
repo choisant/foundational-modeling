@@ -100,13 +100,10 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
     evidences = outputs
     matches = [torch.argmax(i) == torch.argmax(j) for i, j in zip(outputs, y)]
     acc = matches.count(True)/len(matches)
-    annealing_val = (epoch / max_epoch)*annealing_coef
-    
-    #coef=0.001
     bayes_risk = CEBayesRiskLoss()
     br = bayes_risk(evidences, y.to(device)).to(device)
     kld_loss = KLDivergenceLoss()
-    kld = annealing_val*kld_loss(evidences, y.to(device)).to(device)
+    kld = epoch*annealing_coef*kld_loss(evidences, y.to(device)).to(device)
 
     if Teddy:
         loss = evidential_classification(outputs, y.to(device), lamb=annealing_coef)

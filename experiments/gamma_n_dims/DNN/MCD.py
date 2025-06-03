@@ -52,7 +52,10 @@ def predict_MCD(model, df, test_dataset, device, n_MC:int = 100):
     df_new["Est_prob_c1_noMC"] = torch.softmax(logits, dim=-1)[:,1]
 
     # Predict with MC dropout
-    mean_val, variance_val = mc_predictions(model, device, test_dataset, 2**8, n_MC, 2, len(test_dataset))
+    mean_val, variance_val = mc_predictions(model, device, test_dataset,
+                                            forward_passes=n_MC, 
+                                            n_classes=2, 
+                                            n_samples=len(test_dataset))
     df_new["Est_prob_c1"] = mean_val[:,-1]
     df_new["Prediction"] = np.argmax(mean_val, axis=-1).flatten()
     # Error is the same for both scores
@@ -69,30 +72,33 @@ bs_list = [128, 128, 128, 128*2, 1024, 1024, 1024*2] #Batchsize
 
 # SGD options
 if VARY_HYPERPARAMS == False:
-    n_runs = 10
+    n_runs = 20
     lr = 0.001
     weight_decay = 0.01
     p_dropout = 0.3
+    n_MC = 500
     n_nodes = 200
     n_layers = 3
     SAVE_PREDS = True
 else:
-    n_runs = 5
+    n_runs = 20
+    n_MC = 200
     SAVE_PREDS = False #Don't save predictions for hyperparam search mode
     hyperparams = {
         "lr" : [0.01, 0.001, 0.0001],
         "weight_decay" : [0.1, 0.01, 0.001],
-        "p_dropout" : [0.2, 0.3, 0.5],
+        "p_dropout" : [0.1, 0.3, 0.5],
         "layers" : [1, 3, 8]
     }
-    n_train = n_data[2]
-    batchsize = bs_list[2]
+    n_data = [250, 1000, 5000]
+    bs_list = [128, 256, 1024]
+
 patience = 20 # For early stopping
 epochs = 250
 
 # Data constants
-shapes = [2, 6]
-scales = [5, 3]
+shapes = [2, 4]
+scales = [3, 3]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -189,7 +195,7 @@ if VARY_HYPERPARAMS == False:
                                     val_dataset, batchsize=batchsize, epochs = epochs, 
                                     device = device, optimizer = optimizer, early_stopping=patience)
             
-            val_df = predict_MCD(model, val_df, val_dataset, device, n_MC=200)
+            val_df = predict_MCD(model, val_df, val_dataset, device, n_MC=n_MC)
 
             ll = log_loss(val_df["class"], val_df["Est_prob_c1"])
             print(f"n_train = {n_data[i]}, logloss={ll}, best value: {logloss_min}")
@@ -197,9 +203,9 @@ if VARY_HYPERPARAMS == False:
             if ll < logloss_min:
                 print(f"New best values: n_train = {n_data[i]}, logloss={ll}")
                 logloss_min = ll
-                test_dfs[i] = predict_MCD(model, test_dfs[i], test_dataset, 2, 100, device, n_MC=200)
-                grid_dfs[i] = predict_MCD(model, grid_dfs[i], grid_dataset, 2, 100, device, n_MC=200)
-                large_grid_dfs[i] = predict_MCD(model, large_grid_dfs[i], large_grid_dataset, 2, 100, device, n_MC=200)
+                test_dfs[i] = predict_MCD(model, test_dfs[i], test_dataset, device, n_MC=n_MC)
+                grid_dfs[i] = predict_MCD(model, grid_dfs[i], grid_dataset, device, n_MC=n_MC)
+                large_grid_dfs[i] = predict_MCD(model, large_grid_dfs[i], large_grid_dataset, device, n_MC=n_MC)
 
             # Save best prediction
         if (not os.path.isdir(f"predictions/{trainfile}") ):
@@ -213,88 +219,101 @@ if VARY_HYPERPARAMS == False:
 
 else:
     print("Starting hyperparameter search")
-    train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+    start = timer()
+    errors=0
     # Run more times for statistics
     for j in range(n_runs):
-        df_run = create_df(n_train, hyperparams)
-        metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
-                       "Std UQ", "Min UQ", "Max UQ",
-                       "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
-                       "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
-        for key in metric_keys:
-            df_run[key] = None
-        print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
-        # Run once for each hyperparameter combination
-        for i in range(len(df_run)):
-            val_df = pd.read_csv(f"../data/{valfile}.csv")
-            large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
-            
-            # Get parameters
-            lr = df_run["lr"].values[i]
-            weight_decay = df_run["weight_decay"].values[i]
-            n_layers = int(df_run["layers"].values[i])
-            n_nodes = int(df_run["nodes"].values[i])
-            p_dropout = df_run["p_dropout"].values[i]
-            
-            # Initialize model and optimizer
-            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2, p=p_dropout).to(device)
-            optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-            
-            # Train model
-            training_results = train_classifier(model, train_dataset, 
-                                    val_dataset, batchsize=batchsize, epochs = epochs, 
-                                    device = device, optimizer = optimizer, early_stopping=patience)
-            # Evaluate on validation set
-            val_df = predict_MCD(model, val_df, val_dataset, device, n_MC=200)
-            
-            len_nan = len(val_df[val_df.isnull().any(axis=1)])
-            if (len_nan < len(val_df)):
-                if len_nan > 0:
-                    print(f"Dropping {len_nan} rows of NaNs from validation file")
-                    val_df = val_df.dropna()
-                # Make them tensors (might be redundant)
-                est_probs = torch.Tensor(val_df["Est_prob_c1"])
-                pred_class = torch.Tensor(val_df["Prediction"])
-                target = torch.Tensor(val_df["class"])
-                truth_probs = torch.Tensor(val_df["p_c1_given_r"])
+        for k in range(len(n_data)):
+            n_train = n_data[k]
+            batchsize = bs_list[k]
+            train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+            df_run = create_df(n_train, hyperparams)
+            metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
+                        "Std UQ", "Min UQ", "Max UQ",
+                        "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
+                        "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
+            for key in metric_keys:
+                df_run[key] = None
+            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
+            # Run once for each hyperparameter combination
+            i = 0
+            while i < len(df_run):
+                val_df = pd.read_csv(f"../data/{valfile}.csv")
+                large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
+                
+                # Get parameters
+                lr = df_run["lr"].values[i]
+                weight_decay = df_run["weight_decay"].values[i]
+                n_layers = int(df_run["layers"].values[i])
+                n_nodes = int(df_run["nodes"].values[i])
+                p_dropout = df_run["p_dropout"].values[i]
+                
+                # Initialize model and optimizer
+                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2, p=p_dropout).to(device)
+                optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+                
+                # Train model
+                training_results = train_classifier(model, train_dataset, 
+                                        val_dataset, batchsize=batchsize, epochs = epochs, 
+                                        device = device, optimizer = optimizer, early_stopping=patience)
+                # Evaluate on validation set
+                val_df = predict_MCD(model, val_df, val_dataset, device, n_MC=n_MC)
+                
+                len_nan = len(val_df[val_df.isnull().any(axis=1)])
+                if (len_nan < len(val_df)):
+                    if len_nan > 0:
+                        print(f"Dropping {len_nan} rows of NaNs from validation file")
+                        val_df = val_df.dropna()
+                    # Make them tensors (might be redundant)
+                    est_probs = torch.Tensor(val_df["Est_prob_c1"])
+                    pred_class = torch.Tensor(val_df["Prediction"])
+                    target = torch.Tensor(val_df["class"])
+                    truth_probs = torch.Tensor(val_df["p_c1_given_r"])
 
-                # Calculate metrics
-                ll = log_loss(target, est_probs)
-                df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
-                df_run.loc[i, "LogLoss"] = ll
-                bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
-                ece = bce_l1(est_probs, target).item()
-                df_run.loc[i, "ECE"] = ece
-                df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
-                df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
-                df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
+                    # Calculate metrics
+                    ll = log_loss(target, est_probs)
+                    df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
+                    df_run.loc[i, "LogLoss"] = ll
+                    bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
+                    ece = bce_l1(est_probs, target).item()
+                    df_run.loc[i, "ECE"] = ece
+                    df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
+                    df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
+                    df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
 
-                # Evaluate on large grid
-                large_grid_df = predict_MCD(model, large_grid_df, large_grid_dataset, device, n_MC=200)
-                large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
+                    # Evaluate on large grid
+                    large_grid_df = predict_MCD(model, large_grid_df, large_grid_dataset, device, n_MC=n_MC)
+                    large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
 
-                df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
-                df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
-                df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
-                df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
+                    df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
+                    df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
+                    df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
+                    df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
 
-                df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
+                    df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
-                # Save for every line, in case something goes wrong
-                if (not os.path.isdir(f"gridsearch") ):
-                    os.mkdir(f"gridsearch")
-                if (not os.path.isdir(f"gridsearch/{trainfile}") ):
-                    os.mkdir(f"gridsearch/{trainfile}")
-                if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
-                    os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}.csv")
-            else:
-                print("WTF is going on here?? Skipping these")
-                print(df_run.loc[i])
-                print(val_df["Est_prob_c1"])
+                    # Save for every line, in case something goes wrong
+                    if (not os.path.isdir(f"gridsearch") ):
+                        os.mkdir(f"gridsearch")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}") ):
+                        os.mkdir(f"gridsearch/{trainfile}")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
+                        os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    i = i + 1
+                else:
+                    print("WTF is going on here?? Skipping these")
+                    print(df_run.loc[i])
+                    print(val_df["Est_prob_c1"])
+                    errors = errors + 1
+
+    end = timer()
+    print("Finsihed Monte Carlo Dropout grid search")
+    print("Grid search time: ", timedelta(seconds=end-start))
+    print("Total nr of errors caught: ", errors)

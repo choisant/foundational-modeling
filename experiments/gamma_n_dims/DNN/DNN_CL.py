@@ -66,16 +66,17 @@ else:
         "layers" : [1, 3, 8],
         "bias_weight" : [0.5, 0.1, 0.2]
     }
-    n_train = n_data[2]
-    batchsize = bs_list[2]
-n_ensemble = 10
+    n_data = [250, 1000, 5000]
+    bs_list = [128, 256, 1024]
+
+n_ensemble = 20
 n_classes = 2
 patience = 20 # For early stopping
 epochs = 250
 
 # Data constants
-shapes = [2, 6]
-scales = [5, 3]
+shapes = [2, 4]
+scales = [4, 3]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -273,99 +274,109 @@ if VARY_HYPERPARAMS == False:
 else:
     print("Starting hyperparameter search")
     start = timer()
-    train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+    errors=0
     # Run more times for statistics
     for j in range(n_runs):
-        df_run = create_df(n_train, hyperparams)
-        metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
-                       "Std UQ", "Min UQ", "Max UQ",
-                       "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
-                       "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
-        for key in metric_keys:
-            df_run[key] = None
-        print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
-        # Run once for each hyperparameter combination
-        for i in range(len(df_run)):
-            val_df = pd.read_csv(f"../data/{valfile}.csv")
-            large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
-            
-            # Get parameters
-            lr = df_run["lr"].values[i]
-            weight_decay = df_run["weight_decay"].values[i]
-            n_layers = int(df_run["layers"].values[i])
-            n_nodes = int(df_run["nodes"].values[i])
-            bias_weight = df_run["bias_weight"].values[i]
+        # Run once per dataset per run
+        for k in range(len(n_data)):
+            n_train = n_data[k]
+            batchsize = bs_list[k]
+            train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
+            df_run = create_df(n_train, hyperparams)
+            metric_keys = ["ACC", "LogLoss", "Mean KL-div", "ECE", "WD", "Mean UQ", 
+                        "Std UQ", "Min UQ", "Max UQ",
+                        "Mean Pc1 OOD", "Std Pc1 OOD", "Max Pc1 OOD", "Min Pc1 OOD",
+                        "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
+            for key in metric_keys:
+                df_run[key] = None
+            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
+            # Run once for each hyperparameter combination
+            i = 0
+            while i < len(df_run):
+                val_df = pd.read_csv(f"../data/{valfile}.csv")
+                large_grid_df = pd.read_csv(f"../data/{large_gridfile}.csv")
+                
+                # Get parameters
+                lr = df_run["lr"].values[i]
+                weight_decay = df_run["weight_decay"].values[i]
+                n_layers = int(df_run["layers"].values[i])
+                n_nodes = int(df_run["nodes"].values[i])
+                bias_weight = df_run["bias_weight"].values[i]
 
-            # Train model
-            val_df, test_df, grid_df, large_grid_df, total_time = train_ensemble(n_ensemble, n_train, batchsize, 
-                                                                                 n_nodes, n_layers, lr, weight_decay,
-                                                                                 n_classes=n_classes, bias_weight=bias_weight)
-            
-            # Evaluate on validation set
-            val_df["Est_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
-            val_df["Std_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
-            val_df["Prediction"] = 0
-            mask = val_df["Est_prob_c1"] > 0.5 # Equivalent to argmax for binary classification
-            val_df.loc[mask, "Prediction"] = 1
+                # Train model
+                val_df, test_df, grid_df, large_grid_df, total_time = train_ensemble(n_ensemble, n_train, batchsize, 
+                                                                                    n_nodes, n_layers, lr, weight_decay,
+                                                                                    n_classes=n_classes, bias_weight=bias_weight)
+                
+                # Evaluate on validation set
+                val_df["Est_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
+                val_df["Std_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
+                val_df["Prediction"] = 0
+                mask = val_df["Est_prob_c1"] > 0.5 # Equivalent to argmax for binary classification
+                val_df.loc[mask, "Prediction"] = 1
 
-            len_nan = len(val_df[val_df.isnull().any(axis=1)])
-            if (len_nan < len(val_df)):
-                if len_nan > 0:
-                    print(f"Dropping {len_nan} rows of NaNs from validation file")
-                    val_df = val_df.dropna()
-                # Make them tensors (might be redundant)
-                est_probs = torch.Tensor(val_df["Est_prob_c1"])
-                pred_class = torch.Tensor(val_df["Prediction"])
-                target = torch.Tensor(val_df["class"])
-                truth_probs = torch.Tensor(val_df["p_c1_given_r"])
+                len_nan = len(val_df[val_df.isnull().any(axis=1)])
+                if (len_nan < len(val_df)):
+                    if len_nan > 0:
+                        print(f"Dropping {len_nan} rows of NaNs from validation file")
+                        val_df = val_df.dropna()
+                    # Make them tensors (might be redundant)
+                    est_probs = torch.Tensor(val_df["Est_prob_c1"])
+                    pred_class = torch.Tensor(val_df["Prediction"])
+                    target = torch.Tensor(val_df["class"])
+                    truth_probs = torch.Tensor(val_df["p_c1_given_r"])
 
-                # Calculate metrics
-                ll = log_loss(target, est_probs)
-                df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
-                df_run.loc[i, "LogLoss"] = ll
-                bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
-                ece = bce_l1(est_probs, target).item()
-                df_run.loc[i, "ECE"] = ece
-                df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
-                df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
-                df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
+                    # Calculate metrics
+                    ll = log_loss(target, est_probs)
+                    df_run.loc[i, "ACC"] = accuracy_score(target, pred_class)
+                    df_run.loc[i, "LogLoss"] = ll
+                    bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
+                    ece = bce_l1(est_probs, target).item()
+                    df_run.loc[i, "ECE"] = ece
+                    df_run.loc[i, "WD"] = wasserstein_distance(truth_probs, est_probs)
+                    df_run.loc[i, "Mean KL-div"] = kl_div(truth_probs, est_probs).mean().numpy()
+                    df_run.loc[i, "Mean UQ"] = val_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ"] = val_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ"] = val_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ"] = val_df["Std_prob_c1"].min()
 
-                # Evaluate on large grid
-                large_grid_df["Est_prob_c1"] = large_grid_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
-                large_grid_df["Std_prob_c1"] = large_grid_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
-                large_grid_df["Prediction_ensemble"] = 0
-                mask = large_grid_df["Est_prob_c1"] > 0.5
-                large_grid_df.loc[mask, "Prediction_ensemble"] = 1
-                large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
+                    # Evaluate on large grid
+                    large_grid_df["Est_prob_c1"] = large_grid_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
+                    large_grid_df["Std_prob_c1"] = large_grid_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
+                    large_grid_df["Prediction_ensemble"] = 0
+                    mask = large_grid_df["Est_prob_c1"] > 0.5
+                    large_grid_df.loc[mask, "Prediction_ensemble"] = 1
+                    large_r_df = large_grid_df.copy()[large_grid_df["r"] > 700]
 
-                df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
-                df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
-                df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
-                df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
+                    df_run.loc[i, "Mean Pc1 OOD"] = large_r_df["Est_prob_c1"].mean()
+                    df_run.loc[i, "Std Pc1 OOD"] = large_r_df["Est_prob_c1"].std()
+                    df_run.loc[i, "Max Pc1 OOD"] = large_r_df["Est_prob_c1"].max()
+                    df_run.loc[i, "Min Pc1 OOD"] = large_r_df["Est_prob_c1"].min()
 
-                df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
-                df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
-                df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
-                df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
+                    df_run.loc[i, "Mean UQ OOD"] = large_r_df["Std_prob_c1"].mean()
+                    df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
+                    df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
+                    df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
-                df_run.loc[i, "Training time"] = total_time
+                    df_run.loc[i, "Training time"] = total_time
 
-                # Save for every line, in case something goes wrong
-                if (not os.path.isdir(f"gridsearch") ):
-                    os.mkdir(f"gridsearch")
-                if (not os.path.isdir(f"gridsearch/{trainfile}") ):
-                    os.mkdir(f"gridsearch/{trainfile}")
-                if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
-                    os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}.csv")
-            else:
-                print("WTF is going on here?? Skipping these")
-                print(df_run.loc[i])
-                print(val_df["Est_prob_c1"])
+                    # Save for every line, in case something goes wrong
+                    if (not os.path.isdir(f"gridsearch") ):
+                        os.mkdir(f"gridsearch")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}") ):
+                        os.mkdir(f"gridsearch/{trainfile}")
+                    if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
+                        os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    i = i + 1
+                else:
+                    print("WTF is going on here?? Skipping these")
+                    print(df_run.loc[i])
+                    print(val_df["Est_prob_c1"])
+                    errors = errors + 1
 
     end = timer()
+    print("Finsihed conflictual loss grid search")
     print("Grid search time: ", timedelta(seconds=end-start))
+    print("Total nr of errors caught: ", errors)
 
