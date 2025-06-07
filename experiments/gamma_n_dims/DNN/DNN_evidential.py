@@ -8,6 +8,7 @@ from pathlib import Path
 from tqdm import tqdm
 from timeit import default_timer as timer
 from datetime import timedelta
+import argparse
 
 import torch
 import torch.optim as optim
@@ -30,6 +31,15 @@ from SequentialNet import SequentialNet
 from evidential import train_evidential_classifier, predict_evidential_classifier
 from util import label_maker
 
+##Parser
+parser = argparse.ArgumentParser()
+parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape factor of class 1.")
+parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
+parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
+parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
+args = parser.parse_args()
+
 # Set up device
 device = (
     "cuda"
@@ -42,7 +52,7 @@ print(f"Using {device} device {torch.cuda.get_device_name(1)}")
 
 # Machine learning option
 ALGORITHM_NAME = "evidential"
-VARY_HYPERPARAMS = True # Increases run time substantially and does not save any predictions/models
+VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
 
@@ -50,12 +60,12 @@ x2_key = "x2"
 if VARY_HYPERPARAMS == False:
     n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
     bs_list = [128, 128, 256, 256, 1024, 1024, 1024*2] #Batchsize
-    n_runs = 10
+    n_runs = 20
     lr = 0.0001
     weight_decay = 0.01
-    annealing_coef = 0.2 #Constant multiplier for KL div term
-    n_nodes = 200
-    n_layers = 3
+    annealing_coef = 0.02 #Constant multiplier for KL div term
+    n_nodes = 2000
+    n_layers = 8
     SAVE_PREDS = True
 else:
     n_runs = 20
@@ -73,8 +83,8 @@ patience = 20 # For early stopping
 epochs = 200
 
 # Data constants
-shapes = [2, 4]
-scales = [3, 3]
+shapes = [args.shape1, args.shape2]
+scales = [args.scale1, args.scale2]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -149,6 +159,13 @@ Start training
 """
 
 if VARY_HYPERPARAMS == False:
+    # Create folders
+    if (not os.path.isdir(f"predictions/{trainfile}") ):
+            os.mkdir(f"predictions/{trainfile}")
+    if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
+        os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
+        
+    print(f"Starting training of {n_runs} models for increasing nr of datapoints: {n_data} for study.")
     test_dfs = [0]*len(n_data)
     grid_dfs = [0]*len(n_data)
     large_grid_dfs = [0]*len(n_data)
@@ -182,10 +199,10 @@ if VARY_HYPERPARAMS == False:
             target = torch.Tensor(val_df["class"])
             bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
             ece = bce_l1(preds, target).item()
-            print(f"n_train = {n_data[i]}, logloss={ll}, ECE= {ece}, best value: {logloss_min}")
+            #print(f"n_train = {n_data[i]}, logloss={ll}, ECE= {ece}, best value: {logloss_min}")
 
             if ll < logloss_min:
-                print(f"New best values: n_train = {n_data[i]}, logloss={ll}, ECE= {ece}")
+                #print(f"New best values: n_train = {n_data[i]}, logloss={ll}, ECE= {ece}")
                 logloss_min = ll
 
                 test_dfs[i] = pd.read_csv(f"../data/{testfile}.csv")
@@ -208,19 +225,15 @@ if VARY_HYPERPARAMS == False:
 
                 probs_large_grid, uncertainties_large_grid, beliefs_large_grid = predict_evidential_classifier(model, large_grid_dataset, 2, 100, device)
                 preds_large_grid = torch.argmax(probs_large_grid, dim=-1).flatten()
-                large_grid_dfs[i]["Prediction"] = preds_grid
-                large_grid_dfs[i]["Est_prob_c1"] = probs_grid[:,1] #Get probability score for blue
-                large_grid_dfs[i]["Std_prob_c1"] = uncertainties_grid[:,1]
-                large_grid_dfs[i]["Beliefs"] = beliefs_grid[:,1]
+                large_grid_dfs[i]["Prediction"] = preds_large_grid
+                large_grid_dfs[i]["Est_prob_c1"] = probs_large_grid[:,1] #Get probability score for blue
+                large_grid_dfs[i]["Std_prob_c1"] = uncertainties_large_grid[:,1]
+                large_grid_dfs[i]["Beliefs"] = beliefs_large_grid[:,1]
 
-            # Save best prediction
-        if (not os.path.isdir(f"predictions/{trainfile}") ):
-            os.mkdir(f"predictions/{trainfile}")
-        if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
-            os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
-        test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-        grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-        large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                # Save best prediction
+                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
+                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
 
 
 else:

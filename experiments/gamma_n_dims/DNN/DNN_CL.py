@@ -8,6 +8,7 @@ from pathlib import Path
 from tqdm import tqdm
 from timeit import default_timer as timer
 from datetime import timedelta
+import argparse
 
 import torch
 import torch.optim as optim
@@ -30,6 +31,15 @@ from SequentialNet import SequentialNet
 from machine_learning import *
 from util import label_maker
 
+##Parser
+parser = argparse.ArgumentParser()
+parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape factor of class 1.")
+parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
+parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
+parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
+args = parser.parse_args()
+
 # Set up device
 device = (
     "cuda"
@@ -42,7 +52,7 @@ print(f"Using {device} device {torch.cuda.get_device_name(1)}")
 
 # Machine learning option
 ALGORITHM_NAME = "CL"
-VARY_HYPERPARAMS = True # Increases run time substantially and does not save any predictions/models
+VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
 n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
@@ -66,8 +76,8 @@ else:
         "layers" : [1, 3, 8],
         "bias_weight" : [0.5, 0.1, 0.2]
     }
-    n_data = [250, 1000, 5000]
-    bs_list = [128, 256, 1024]
+    n_data = [5000]#[250, 1000, 5000]
+    bs_list = [1024]#[128, 256, 1024]
 
 n_ensemble = 20
 n_classes = 2
@@ -75,8 +85,8 @@ patience = 20 # For early stopping
 epochs = 250
 
 # Data constants
-shapes = [2, 4]
-scales = [4, 3]
+shapes = [args.shape1, args.shape2]
+scales = [args.scale1, args.scale2]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -214,8 +224,14 @@ def train_ensemble(n_ensemble:int, n_train:int, batchsize:int, n_nodes:int, n_la
 """
 Start training
 """
-
+print("Conflictual Loss")
 if VARY_HYPERPARAMS == False:
+    # Create folders
+    if (not os.path.isdir(f"predictions/{trainfile}") ):
+            os.mkdir(f"predictions/{trainfile}")
+    if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
+        os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
+    
     val_ensembles = [0]*len(n_data)
     test_ensembles = [0]*len(n_data)
     grid_ensembles = [0]*len(n_data)
@@ -224,7 +240,11 @@ if VARY_HYPERPARAMS == False:
     for i in range(len(n_data)):
         logloss_min = 1
         for j in tqdm(range(n_runs)):
-            val_df, test_df, grid_df, large_grid_df, total_time = train_ensemble(n_ensemble, n_data[i], bs_list[i])
+            #Train model
+            val_df, test_df, grid_df, large_grid_df, total_time = train_ensemble(n_ensemble, n_data[i], bs_list[i], 
+                                                                                    n_nodes, n_layers, lr, weight_decay,
+                                                                                    n_classes=n_classes, bias_weight=bias_weight)
+                
             val_df["Est_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
             val_df["Std_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
             val_df["Prediction"] = 0
@@ -261,14 +281,10 @@ if VARY_HYPERPARAMS == False:
                 mask = large_grid_ensembles[i]["Est_prob_c1"] > 0.5
                 large_grid_ensembles[i].loc[mask, "Prediction"] = 1
         
-        # Save best prediction
-        if (not os.path.isdir(f"predictions/{trainfile}") ):
-            os.mkdir(f"predictions/{trainfile}")
-        if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
-            os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
-        test_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-        grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-        large_grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                # Save best prediction
+                test_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
+                grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
+                large_grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
 
 
 else:

@@ -7,7 +7,9 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 from timeit import default_timer as timer
+from datetime import datetime
 from datetime import timedelta
+import argparse
 
 import torch
 import torch.optim as optim
@@ -30,9 +32,19 @@ from SequentialNet import SequentialNet
 from machine_learning import *
 from util import label_maker
 
+##Parser
+parser = argparse.ArgumentParser()
+parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape factor of class 1.")
+parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
+parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
+parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
+args = parser.parse_args()
+print(args.grid)
+
 # Set up device
 device = (
-    "cuda"
+    "cuda:1"
     if torch.cuda.is_available()
     else "mps"
     if torch.backends.mps.is_available()
@@ -64,7 +76,7 @@ def predict_MCD(model, df, test_dataset, device, n_MC:int = 100):
 
 # Machine learning option
 ALGORITHM_NAME = "MCD"
-VARY_HYPERPARAMS = True # Increases run time substantially and does not save any predictions/models
+VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
 n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
@@ -97,8 +109,8 @@ patience = 20 # For early stopping
 epochs = 250
 
 # Data constants
-shapes = [2, 4]
-scales = [3, 3]
+shapes = [args.shape1, args.shape2]
+scales = [args.scale1, args.scale2]
 k = len(scales) # Number of classes
 d = 2 # Number of dimensions
 p_c = [1/len(shapes)]*len(shapes) # Uniform distributon over classes
@@ -173,6 +185,12 @@ Start training
 """
 
 if VARY_HYPERPARAMS == False:
+    # Create folders
+    if (not os.path.isdir(f"predictions/{trainfile}") ):
+        os.mkdir(f"predictions/{trainfile}")
+    if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
+        os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
+    # create dataframes
     test_dfs = [0]*len(n_data)
     grid_dfs = [0]*len(n_data)
     large_grid_dfs = [0]*len(n_data)
@@ -206,16 +224,11 @@ if VARY_HYPERPARAMS == False:
                 test_dfs[i] = predict_MCD(model, test_dfs[i], test_dataset, device, n_MC=n_MC)
                 grid_dfs[i] = predict_MCD(model, grid_dfs[i], grid_dataset, device, n_MC=n_MC)
                 large_grid_dfs[i] = predict_MCD(model, large_grid_dfs[i], large_grid_dataset, device, n_MC=n_MC)
-
-            # Save best prediction
-        if (not os.path.isdir(f"predictions/{trainfile}") ):
-            os.mkdir(f"predictions/{trainfile}")
-        if (not os.path.isdir(f"predictions/{trainfile}/{ALGORITHM_NAME}") ):
-            os.mkdir(f"predictions/{trainfile}/{ALGORITHM_NAME}")
-        test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-        grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-        grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-        large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                # Save best predictions
+                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
+                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
 
 else:
     print("Starting hyperparameter search")
@@ -234,7 +247,9 @@ else:
                         "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
             for key in metric_keys:
                 df_run[key] = None
-            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
+            dt = datetime.strptime("21/11/06 16:30", "%d/%m/%y %H:%M")
+            print(f"Timestamp: {dt.strftime("%A, %d. %B %Y %I:%M%p")}")
+            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs} for ntrain={n_train}.")
             # Run once for each hyperparameter combination
             i = 0
             while i < len(df_run):
@@ -253,6 +268,7 @@ else:
                 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
                 
                 # Train model
+                start_timer = timer()
                 training_results = train_classifier(model, train_dataset, 
                                         val_dataset, batchsize=batchsize, epochs = epochs, 
                                         device = device, optimizer = optimizer, early_stopping=patience)
@@ -297,6 +313,9 @@ else:
                     df_run.loc[i, "Std UQ OOD"] = large_r_df["Std_prob_c1"].std()
                     df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
                     df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
+                    
+                    end_timer = timer()
+                    df_run.loc[i, "Timer"] = timedelta(seconds=end_timer-start_timer)
 
                     # Save for every line, in case something goes wrong
                     if (not os.path.isdir(f"gridsearch") ):
@@ -314,6 +333,6 @@ else:
                     errors = errors + 1
 
     end = timer()
-    print("Finsihed Monte Carlo Dropout grid search")
+    print("Finished Monte Carlo Dropout grid search")
     print("Grid search time: ", timedelta(seconds=end-start))
     print("Total nr of errors caught: ", errors)

@@ -143,7 +143,7 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False, rmax:fl
     else:
     
         if error_key == None:
-            sn.scatterplot(data = df, x="x1", y="x2", ax = ax, hue=pred_key, 
+            sn.scatterplot(data = df, x="x1", y="x2", s=4, ax = ax, hue=pred_key, 
                         hue_norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
                             palette=cmap, legend=False)
         else:
@@ -154,10 +154,10 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False, rmax:fl
     
     ax.set_xlim(-rmax, rmax)
     ax.set_ylim(-rmax, rmax)
-    #ax.set_xlabel(r"x$_1$", fontsize=14)
-    #ax.set_ylabel(r"x$_2$", fontsize=14)
+    ax.set_xlabel(r"x$_1$", fontsize=14)
+    ax.set_ylabel(r"x$_2$", fontsize=14)
 
-    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
+    ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=12, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
     ax.set_xticks([-rmax+5, 0, rmax-5])
     ax.set_yticks([-rmax+5, 0, rmax-5])
@@ -251,14 +251,14 @@ def cartesian_to_polar_df(df, x_key, y_key, r_key, theta_key):
 
 #### Metrics
 
-def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
+def calculate_metrics(test_dfs:list, n_data:list, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
 
     keys = ["N data"]
     scores = pd.DataFrame(columns=keys)
     
-    if "P_blue_given_x" in truth_data.keys():
+    if "P_blue_given_x" in truth_test_data.keys():
         truth_prob_key = "P_blue_given_x"
-    elif "p_c1_given_r" in truth_data.keys():
+    elif "p_c1_given_r" in truth_test_data.keys():
         truth_prob_key = "p_c1_given_r"
     else:
         print("Not a recognized truth file format.")
@@ -269,11 +269,9 @@ def calculate_metrics(test_dfs:list, grid_dfs:list, n_data:list, truth_data, tru
     scores["ACC"] = [accuracy_score(test_dfs[i]["class"][0:n_max], test_dfs[i][pred_key][0:n_max], normalize=True) for i in range(n_plots)]
     scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
     scores["WD test"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
-    scores["WD grid"] = [wasserstein_distance(truth_data[truth_prob_key][0:n_max], grid_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Avg UE"] = [test_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
     scores["Std UE"] = [test_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
     scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
-    scores["Mean KL-div grid"] = [kl_div(truth_data[truth_prob_key][0:n_max], grid_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
 

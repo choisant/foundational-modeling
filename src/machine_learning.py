@@ -50,7 +50,7 @@ def train_classifier(net, traindata, testdata, batchsize:int, epochs:int, device
     i = 0
     patience = early_stopping #How many epochs to keep training if no improvement in validation loss
     min_loss = None
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         # Iterate over batches
         for data in dataset:
             i = i+1
@@ -156,7 +156,7 @@ def mc_predictions(net,
     data_loader = DataLoader(testdata, n_samples, shuffle=False)
     dropout_predictions = np.empty((0, n_samples, n_classes))
     print("Starting MC dropout inference: ")
-    for i in tqdm(range(forward_passes)):
+    for i in range(forward_passes):
         predictions = np.empty((0, n_classes))
         net.eval()
         enable_dropout(net)
@@ -241,7 +241,7 @@ def train_bnn_classifier(net, traindata, testdata, batchsize:int, epochs:int, de
     i = 0
     patience = early_stopping #How many epochs to keep training if no improvement in validation loss
     min_loss = None
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         # Iterate over batches
         for data in dataset:
             i = i+1
@@ -301,7 +301,7 @@ def predict_bnn_classifier(net, testdata, num_classes:int, size:int, device):
     i = 0
     net.eval()
     with torch.no_grad():
-        for data in tqdm(dataset):
+        for data in dataset:
             X, y = data
             output = net(X.to(device))
             probs[i] = torch.softmax(output.data, dim=-1)
@@ -321,7 +321,7 @@ def predict_bnn(model, dataset, df, device, n_classes=2, n_samples=100):
 
     model.eval()
     with torch.no_grad():
-        for i in tqdm(range(n_samples)):
+        for i in range(n_samples):
             for data in dataset:
                 X, y = data
                 y = torch.Tensor.float(y)
