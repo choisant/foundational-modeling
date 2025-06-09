@@ -6,21 +6,21 @@
 #PBS -q unlimited
 ## Concat output files
 #PBS -j oe
-#PBS -t 4
+#PBS -t 2
 
 gridSearch=true
 
 #Dataset A
-#shape1=2
-#shape2=6
-#scale1=5
-#scale2=3
+shape1=2
+shape2=6
+scale1=5
+scale2=3
 
 #Dataset B
-shape1=2
-shape2=4
-scale1=3
-scale2=3
+#shape1=2
+#shape2=4
+#scale1=3
+#scale2=3
 
 
 . /home/agrefsru/.bashrc

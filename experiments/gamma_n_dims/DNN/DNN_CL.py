@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 from timeit import default_timer as timer
+from datetime import datetime
 from datetime import timedelta
 import argparse
 
@@ -76,8 +77,8 @@ else:
         "layers" : [1, 3, 8],
         "bias_weight" : [0.5, 0.1, 0.2]
     }
-    n_data = [5000]#[250, 1000, 5000]
-    bs_list = [1024]#[128, 256, 1024]
+    n_data = [250, 1000, 5000]
+    bs_list = [128, 256, 1024]
 
 n_ensemble = 20
 n_classes = 2
@@ -305,7 +306,9 @@ else:
                         "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
             for key in metric_keys:
                 df_run[key] = None
-            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs}")
+            dt = datetime.now()
+            print(f"Timestamp: {dt.strftime('%A, %d. %B %Y %I:%M%p')}")
+            print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs} for ntrain={n_train}.")
             # Run once for each hyperparameter combination
             i = 0
             while i < len(df_run):
@@ -323,7 +326,7 @@ else:
                 val_df, test_df, grid_df, large_grid_df, total_time = train_ensemble(n_ensemble, n_train, batchsize, 
                                                                                     n_nodes, n_layers, lr, weight_decay,
                                                                                     n_classes=n_classes, bias_weight=bias_weight)
-                
+                print("Training time: ", total_time)
                 # Evaluate on validation set
                 val_df["Est_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].mean(axis=1)
                 val_df["Std_prob_c1"] = val_df[[f"Est_prob_c1_{i}" for i in range(n_ensemble)]].std(axis=1)
@@ -375,6 +378,7 @@ else:
                     df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
                     df_run.loc[i, "Training time"] = total_time
+                    df_run.loc[i, "Time"] = timer()
 
                     # Save for every line, in case something goes wrong
                     if (not os.path.isdir(f"gridsearch") ):

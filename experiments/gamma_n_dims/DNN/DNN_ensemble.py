@@ -358,6 +358,7 @@ else:
                     df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
                     df_run.loc[i, "Training time"] = total_time
+                    df_run.loc[i, "Time"] = timer()
 
                     # Save for every line, in case something goes wrong
                     if (not os.path.isdir(f"gridsearch") ):

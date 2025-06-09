@@ -44,7 +44,7 @@ print(args.grid)
 
 # Set up device
 device = (
-    "cuda:1"
+    "cuda"
     if torch.cuda.is_available()
     else "mps"
     if torch.backends.mps.is_available()
@@ -235,7 +235,8 @@ else:
     start = timer()
     errors=0
     # Run more times for statistics
-    for j in range(n_runs):
+    j = 12
+    while j < n_runs:
         for k in range(len(n_data)):
             n_train = n_data[k]
             batchsize = bs_list[k]
@@ -247,8 +248,8 @@ else:
                         "Mean UQ OOD", "Std UQ OOD", "Max UQ OOD", "Min UQ OOD"]
             for key in metric_keys:
                 df_run[key] = None
-            dt = datetime.strptime("21/11/06 16:30", "%d/%m/%y %H:%M")
-            print(f"Timestamp: {dt.strftime("%A, %d. %B %Y %I:%M%p")}")
+            dt = datetime.now()
+            print(f"Timestamp: {dt.strftime('%A, %d. %B %Y %I:%M%p')}")
             print(f"Testing {len(df_run)} hyperparameter combinations in run nr {j + 1} out of {n_runs} for ntrain={n_train}.")
             # Run once for each hyperparameter combination
             i = 0
@@ -315,7 +316,8 @@ else:
                     df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
                     
                     end_timer = timer()
-                    df_run.loc[i, "Timer"] = timedelta(seconds=end_timer-start_timer)
+                    df_run.loc[i, "Delta time"] = timedelta(seconds=end_timer-start_timer)
+                    df_run.loc[i, "Time"] = timer()
 
                     # Save for every line, in case something goes wrong
                     if (not os.path.isdir(f"gridsearch") ):
@@ -325,13 +327,14 @@ else:
                     if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
                         os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
                     df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    #print("Saving file ", f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
                     i = i + 1
                 else:
                     print("WTF is going on here?? Skipping these")
                     print(df_run.loc[i])
                     print(val_df["Est_prob_c1"])
                     errors = errors + 1
-
+        j = j + 1
     end = timer()
     print("Finished Monte Carlo Dropout grid search")
     print("Grid search time: ", timedelta(seconds=end-start))

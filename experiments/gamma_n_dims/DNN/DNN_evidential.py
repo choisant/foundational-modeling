@@ -329,6 +329,8 @@ else:
                     df_run.loc[i, "Max UQ OOD"] = large_r_df["Std_prob_c1"].max()
                     df_run.loc[i, "Min UQ OOD"] = large_r_df["Std_prob_c1"].min()
 
+                    df_run.loc[i, "Time"] = timer()
+
                     # Save for every line, in case something goes wrong
                     if (not os.path.isdir(f"gridsearch") ):
                         os.mkdir(f"gridsearch")

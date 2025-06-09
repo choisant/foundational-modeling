@@ -155,7 +155,7 @@ def mc_predictions(net,
     """
     data_loader = DataLoader(testdata, n_samples, shuffle=False)
     dropout_predictions = np.empty((0, n_samples, n_classes))
-    print("Starting MC dropout inference: ")
+    #print("Starting MC dropout inference: ")
     for i in range(forward_passes):
         predictions = np.empty((0, n_classes))
         net.eval()

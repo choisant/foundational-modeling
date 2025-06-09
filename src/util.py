@@ -251,8 +251,8 @@ def cartesian_to_polar_df(df, x_key, y_key, r_key, theta_key):
 
 #### Metrics
 
-def calculate_metrics(test_dfs:list, n_data:list, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
-
+def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
+    large_r_dfs = [ood_df.copy()[ood_df["r"] > 700] for ood_df in ood_dfs]
     keys = ["N data"]
     scores = pd.DataFrame(columns=keys)
     
@@ -263,7 +263,7 @@ def calculate_metrics(test_dfs:list, n_data:list, truth_test_data, pred_key, pro
     else:
         print("Not a recognized truth file format.")
         return scores
-    
+    ood_dfs_extrapolate = []
     scores["N data"] = n_data
     n_plots = len(n_data)
     scores["ACC"] = [accuracy_score(test_dfs[i]["class"][0:n_max], test_dfs[i][pred_key][0:n_max], normalize=True) for i in range(n_plots)]
@@ -271,6 +271,10 @@ def calculate_metrics(test_dfs:list, n_data:list, truth_test_data, pred_key, pro
     scores["WD test"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Avg UE"] = [test_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
     scores["Std UE"] = [test_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
+    scores["Avg UE OOD"] = [large_r_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
+    scores["Std UE OOD"] = [large_r_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
+    scores["Avg Q OOD"] = [large_r_dfs[i][pred_key][0:n_max].mean() for i in range(n_plots)]
+    scores["Std Q OOD"] = [large_r_dfs[i][pred_key][0:n_max].std() for i in range(n_plots)]
     scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
