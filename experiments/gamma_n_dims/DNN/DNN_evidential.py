@@ -59,13 +59,13 @@ x2_key = "x2"
 # SGD options
 if VARY_HYPERPARAMS == False:
     n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
-    bs_list = [128, 128, 256, 256, 1024, 1024, 1024*2] #Batchsize
+    bs_list = [128, 128, 128, 256, 1024, 1024, 1024*2] #Batchsize
     n_runs = 20
-    lr = 0.0001
+    lr = 0.001
     weight_decay = 0.01
-    annealing_coef = 0.02 #Constant multiplier for KL div term
-    n_nodes = 2000
-    n_layers = 8
+    annealing_coef = 0.002 #Constant multiplier for KL div term
+    n_nodes = 200
+    n_layers = 3
     SAVE_PREDS = True
 else:
     n_runs = 20
@@ -195,10 +195,6 @@ if VARY_HYPERPARAMS == False:
             val_df["Est_prob_c1"] = probs_val[:,1] #Get probability score for blue
 
             ll = log_loss(val_df["class"], val_df["Est_prob_c1"])
-            preds = torch.Tensor(val_df["Est_prob_c1"])
-            target = torch.Tensor(val_df["class"])
-            bce_l1 = BinaryCalibrationError(n_bins=15, norm='l1')
-            ece = bce_l1(preds, target).item()
             #print(f"n_train = {n_data[i]}, logloss={ll}, ECE= {ece}, best value: {logloss_min}")
 
             if ll < logloss_min:

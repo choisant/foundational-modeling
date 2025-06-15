@@ -96,8 +96,7 @@ def fwd_pass_evidential_classifier(net, X:Tensor, y:Tensor, device, optimizer, b
         net.train()
         net.zero_grad()
     outputs = net(X.to(device))
-    #evidences = F.softplus(outputs)
-    evidences = outputs
+    evidences = F.softplus(outputs)
     matches = [torch.argmax(i) == torch.argmax(j) for i, j in zip(outputs, y)]
     acc = matches.count(True)/len(matches)
     bayes_risk = CEBayesRiskLoss()
@@ -128,7 +127,7 @@ def train_evidential_classifier(net, traindata, testdata, batchsize:int, epochs:
     i = 0
     patience = early_stopping #How many epochs to keep training if no improvement in validation loss
     min_loss = None
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         # Iterate over batches
         for data in dataset:
             i = i+1
