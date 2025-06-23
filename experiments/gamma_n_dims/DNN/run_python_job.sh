@@ -1,14 +1,14 @@
 ## Choose the node to run on
-#PBS -l nodes=atlas3.driftslab.hib.no-0
+#PBS -l nodes=atlas2.driftslab.hib.no-0
 ## Name the analysis
 #PBS -N NN_models
 ## Choose queue
 #PBS -q unlimited
 ## Concat output files
 #PBS -j oe
-#PBS -t 1
+#PBS -t 2
 
-gridSearch=false
+gridSearch=true
 
 #Dataset A
 #shape1=2
@@ -17,8 +17,14 @@ gridSearch=false
 #scale2=3
 
 #Dataset B
-shape1=2
-shape2=4
+#shape1=2
+#shape2=4
+#scale1=3
+#scale2=3
+
+#Dataset C
+shape1=6
+shape2=6
 scale1=3
 scale2=3
 

@@ -235,7 +235,7 @@ else:
     start = timer()
     errors=0
     # Run more times for statistics
-    j = 12
+    j = 0
     while j < n_runs:
         for k in range(len(n_data)):
             n_train = n_data[k]

@@ -24,8 +24,8 @@ hyperparams = list(
         Lshapehi = 0.5,
         Lvarm1 = 3^2,
 		# Bayes-Laplace prior for Bernoulli distribution
-        Bshapelo = 1,
-        Bshapehi = 1,
+        Bshapelo = 0.5,
+        Bshapehi = 0.5,
         Dthreshold = 1
     )
 
@@ -79,7 +79,7 @@ if (file.exists(traindatafile)) {
         train_df <- read.csv(traindatafile)
     } else {stop("Please provide a valid CSV file as training data.")}
 
-# Data is already shuffled, no need to reshuffle.
+# Don't shuffle data
 traindata <- train_df[1:ntrain, ]
 
 if (testdatafile != "None") {
@@ -88,12 +88,11 @@ if (testdatafile != "None") {
     } else {stop("Please provide a valid CSV file as test data.")}
 }
 
-
 if (is.character(metadatafile) && file.exists(metadatafile)) {
         metadata <- read.csv(metadatafile, na.strings = '')
     } else {stop("Please provide a valid CSV file as metadata.")}
 
-# Check if polar coordinates
+# Check metadata file for polar coordinates
 if (all(c("r", "a1") %in% metadata[['name']])) {
 	polar <- TRUE
 } else polar <- FALSE
@@ -108,12 +107,14 @@ parent_dir <- dirname(metadatafile)
 # Subfolder: traindatafile/nsamples-X_nchains-Y_ndata-Z
 if (polar) {
 	inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
-                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain, "_POLAR")
-						
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain, "_POLAR")					
+} else if ((hyperparams$Bshapehi != 1) && (hyperparams$Bshapelo != 1)) {
+   inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain, "_Beta_", 
+						hyperparams$Bshapehi, "_", hyperparams$Bshapelo)
 } else {
 	inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
-                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)
-						
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)						
 }
 
 if(!dir.exists(inferno_dir) && runLearn == TRUE) {
@@ -140,94 +141,124 @@ if (runLearn) {
 		appendinfo = FALSE,
 		hyperparams = hyperparams,
 	)
+	summary(warnings())
 } else {cat("Not running MC simulation. \n")}
 
 ##########################################
 # RUN TEST
 ##########################################
 if (testdatafile != "None") {
-	# Classes
-	labels <- cbind(class = c(0, 1))
-	nlabels <- length(labels)
-	if (polar) {
-		xvalues <- test_df[c("r_x", "a_x")]
-	} else {
-		xvalues <- test_df[c("x1", "x2")]
-	}
-	nxvalues <- 2
-
-	ntest <- dim(xvalues)[1]
-	if (nsamples > 100) {
-		nsamples_save <- 100
-	} else {nsamples_save <- nsamples}
-
+	# Run inference
 	starttime <- Sys.time()
 	cat("Starting inference.")
-			
-	Pr_output <- Pr(Y = labels,
-					X = xvalues,
-					learnt = inferno_dir,
-					nsamples = nsamples_save,
-					parallel = ncores,
-					silent = FALSE)
+	# Class can be 0 or 1
+	labels <- cbind(class = c(0, 1))
+	# Number of classes
+	nlabels <- length(labels)
+	# Crashes for too many data points. Do n_samples_per_file at a time.
+	length_df <- dim(test_df)[1]
+	processed <- 0
+	n_samples_per_file <- 1000
+	# Keep going until all datapoints are processed
+	while (processed < length_df) {
+		# Check if we should add n_samples_per_file or just the rest of the data
+		if ((length_df - processed) > n_samples_per_file) {
+			i_start <- processed + 1
+			i_end <- processed + n_samples_per_file
+			testdata <- test_df[(i_start):(i_end), ]
+			if (polar) {
+				xvalues <- testdata[c("r_x", "a_x")]
+			} else {
+				xvalues <- testdata[c("x1", "x2")]
+			}
+		} else {
+			i_start <- processed + 1
+			i_end <- length_df
+			testdata <- test_df[(i_start):(i_end), ]
+			if (polar) {
+				xvalues <- testdata[c("r_x", "a_x")]
+			} else {
+				xvalues <- testdata[c("x1", "x2")]
+			}
+		}
+		# Number of non class-dimensions
+		nxvariates <- 2
+		# Number of data points to test
+		ntest <- dim(xvalues)[1]
+		# Takes forever to process all samples, reduce nr of samples for undertainty calculations
+		nsamples_max <- 200
+		if (nsamples > nsamples_max) {
+			nsamples_save <- nsamples_max
+		} else {nsamples_save <- nsamples}
+
+				
+		Pr_output <- Pr(Y = labels,
+						X = xvalues,
+						learnt = inferno_dir,
+						nsamples = nsamples_save,
+						parallel = ncores,
+						silent = FALSE)
 
 
-	cat("End inference. \n")
+		cat("End inference. \n")
+		
+		# Get values we need
+		stds <- apply(Pr_output$samples, c(1,2), sd) #output (nlabels, ntest)
+		quantiles <- Pr_output$quantiles
+		# Reshape the array from (nlabels, ntest, quantiles) to (nlabels, quantiles, ntest)
+		quantiles <- aperm(quantiles, c(1, 3, 2))
 
+		##########################################
+		# SAVE RESULTS
+		##########################################
+		# Create hdf5 file in outputdir
+		h5file <- file.path(inferno_dir, paste0(sub('.csv$', '', basename(testdatafile)),'_', i_start,
+							'-', i_end,'_inferred.h5'))
+		# Overwrite if it already exists
+		if (!file.exists(h5file)) {
+		h5createFile(h5file)
+		} else {
+		file.remove((h5file))
+		h5createFile(h5file)
+		}
+		# When these files are read in a C-program, the dimensions will be inverted
+		h5createDataset(h5file, 'probabilities', dims = c(nlabels, ntest))
+		h5createDataset(h5file, 'stds', dims = c(nlabels, ntest))
+		h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
+		h5createDataset(h5file, 'data', dims = c(nxvariates, ntest))
+		if ("class" %in% names(testdata)){
+				h5createDataset(h5file, 'truth', dims = c(ntest))
+		}
+		# Write to file
+		cat('Writing to file \n')
+		h5write(Pr_output$values, file = h5file, name = 'probabilities',
+				index = list(NULL, NULL))
+		h5write(stds, file = h5file, name = 'stds',
+				index = list(NULL, NULL))
+		h5write(quantiles, file = h5file, name = 'quantiles',
+				index = list(NULL, NULL, NULL))
+		if (polar) {
+			h5write(t(testdata[c("r", "a1")]),
+				file = h5file, name = 'data', index = list(NULL, NULL)
+				)
+		} else {
+			h5write(t(testdata[c("x1", "x2")]),
+				file = h5file, name = 'data', index = list(NULL, NULL))
+		}
+		if ("class" %in% names(testdata)) {
+				h5write(t(testdata["class"]), file = h5file, name = 'truth',
+						index = list(NULL))
+		}
+		# update processed variable
+		processed <- processed + ntest
+		# Warnings?
+		summary(warnings())
+	}
+	# How long did it take?
 	printdifftime <- function(time1, time2) {
 			difference = difftime(time1, time2, units = 'auto')
 			paste0(signif(difference, 2), ' ', attr(difference, 'units'))
 		}
 
 	cat(paste0("Total time for inference: ", printdifftime(Sys.time(), starttime), '\n'))
-
-
-	condfreqs <- Pr_output$samples
-	quantiles <- Pr_output$quantiles
-	# Reshape the array from (nlabels, ntest, nsamples) to (nlabels, nsamples, ntest)
-	condfreqs <- aperm(condfreqs, c(1, 3, 2))
-	# Reshape the array from (nlabels, ntest, quantiles) to (nlabels, quantiles, ntest)
-	quantiles <- aperm(quantiles, c(1, 3, 2))
-
-	##########################################
-	# SAVE RESULTS
-	##########################################
-	# Create hdf5 file in outputdir
-	h5file <- file.path(inferno_dir, paste0(sub('.csv$', '', basename(testdatafile)), '_inferred.h5'))
-	# Overwrite if it already exists
-	if (!file.exists(h5file)) {
-	h5createFile(h5file)
-	} else {
-	file.remove((h5file))
-	h5createFile(h5file)
-	}
-
-	# When these files are read in a C-program, the dimensions will be inverted
-	h5createDataset(h5file, 'probabilities', dims = c(nlabels, ntest))
-	h5createDataset(h5file, 'quantiles', dims = c(nlabels, 4, ntest))
-	h5createDataset(h5file, 'samples', dims = c(nlabels, nsamples_save, ntest))
-	h5createDataset(h5file, 'data', dims = c(nxvalues, ntest))
-	if ("class" %in% names(test_df)){
-			h5createDataset(h5file, 'truth', dims = c(ntest))
-	}
-	# Write to file
-	cat('Writing to file \n')
-	h5write(Pr_output$values, file = h5file, name = 'probabilities',
-			index = list(NULL, NULL))
-	h5write(quantiles, file = h5file, name = 'quantiles',
-			index = list(NULL, NULL, NULL))
-	h5write(condfreqs, file = h5file, name = 'samples',
-			index = list(NULL, NULL, NULL))
-	if (polar) {
-		h5write(t(test_df[c("r", "a1")]),
-			file = h5file, name = 'data', index = list(NULL, NULL)
-			)
-	} else {
-		h5write(t(test_df[c("x1", "x2")]),
-			file = h5file, name = 'data', index = list(NULL, NULL))
-	}
-	if ("class" %in% names(test_df)) {
-			h5write(t(test_df["class"]), file = h5file, name = 'truth',
-					index = list(NULL))
-	}
 } else {cat("Not running any tests. \n")}
