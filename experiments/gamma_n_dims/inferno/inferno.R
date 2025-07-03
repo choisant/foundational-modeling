@@ -24,8 +24,8 @@ hyperparams = list(
         Lshapehi = 0.5,
         Lvarm1 = 3^2,
 		# Bayes-Laplace prior for Bernoulli distribution
-        Bshapelo = 0.5,
-        Bshapehi = 0.5,
+        Bshapelo = 1,
+        Bshapehi = 1,
         Dthreshold = 1
     )
 
@@ -114,7 +114,8 @@ if (polar) {
 						hyperparams$Bshapehi, "_", hyperparams$Bshapelo)
 } else {
 	inferno_dir <- paste0(parent_dir, "/inference/", sub('.csv$', '', basename(traindatafile)), 
-                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata-", ntrain)						
+                        "/nsamples-", nsamples, "_nchains-",nchains, "_ndata", ntrain, "_ncomps_",
+						hyperparams$ncomponents)						
 }
 
 if(!dir.exists(inferno_dir) && runLearn == TRUE) {
@@ -185,8 +186,8 @@ if (testdatafile != "None") {
 		nxvariates <- 2
 		# Number of data points to test
 		ntest <- dim(xvalues)[1]
-		# Takes forever to process all samples, reduce nr of samples for undertainty calculations
-		nsamples_max <- 200
+		# Takes forever to process all samples, reduce nr of samples for uncertainty calculations
+		nsamples_max <- 1200
 		if (nsamples > nsamples_max) {
 			nsamples_save <- nsamples_max
 		} else {nsamples_save <- nsamples}
@@ -198,7 +199,6 @@ if (testdatafile != "None") {
 						nsamples = nsamples_save,
 						parallel = ncores,
 						silent = FALSE)
-
 
 		cat("End inference. \n")
 		

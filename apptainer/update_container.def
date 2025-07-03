@@ -8,7 +8,7 @@ From: env.sif
 
 %runscript
     #!/bin/bash
-	# Rscript -e "install.packages(pkg='/disk/atlas2/users/agrefsru/inferno_renegade', repos=NULL)"
+	# Rscript -e "install.packages(pkg='./inferno_renegade', repos=NULL)"
 	# Input arguments must be in the order
 	# ndata, nchains, ncores, nsamples, runLearn, testfile, metadatafile, trainfile
 	Rscript $1 -N $2 -c $3 -p $4 -s $5 --runLearn $6 --test $7 $8 $9

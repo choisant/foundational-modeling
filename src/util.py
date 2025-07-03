@@ -152,15 +152,15 @@ def plot_results(df, pred_key, ax, suptitle, error_key=None, grid=False, rmax:fl
                             hue_norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=False),
                             palette=cmap, legend=False)
     
-    ax.set_xlim(-rmax, rmax)
-    ax.set_ylim(-rmax, rmax)
-    ax.set_xlabel(r"x$_1$", fontsize=14)
-    ax.set_ylabel(r"x$_2$", fontsize=14)
+    ax.set_xlim(-int(rmax), int(rmax))
+    ax.set_ylim(-int(rmax), int(rmax))
+    #ax.set_xlabel(r"x$_1$", fontsize=14)
+    #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=12, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax+5, 0, rmax-5])
-    ax.set_yticks([-rmax+5, 0, rmax-5])
+    ax.set_xticks([-int(rmax-5), 0, int(rmax-5)])
+    ax.set_yticks([-int(rmax-5), 0, int(rmax-5)])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax
@@ -188,15 +188,15 @@ def plot_diff(df_pred, df_truth, pred_key, truth_key, ax, suptitle, max_val=0.5,
                     cmap=pink_black_green_cmap(), rasterized=True, edgecolor='face'
                     )
     
-    ax.set_xlim(-rmax, rmax)
-    ax.set_ylim(-rmax, rmax)
+    ax.set_xlim(-int(rmax), int(rmax))
+    ax.set_ylim(-int(rmax), int(rmax))
     #ax.set_xlabel(r"x$_1$", fontsize=14)
     #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax+5, 0, rmax-5])
-    ax.set_yticks([-rmax+5, 0, rmax-5])
+    ax.set_xticks([-int(rmax-5), 0, int(rmax-5)])
+    ax.set_yticks([-int(rmax-5), 0, int(rmax-5)])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax
@@ -216,15 +216,15 @@ def plot_std(df, pred_key, ax, suptitle, grid=False, max_val=0.5, rmax:float=25.
                     palette="inferno",
                     legend=False, linewidth=0)
     
-    ax.set_xlim(-rmax, rmax)
-    ax.set_ylim(-rmax, rmax)
+    ax.set_xlim(-int(rmax), int(rmax))
+    ax.set_ylim(-int(rmax), int(rmax))
     #ax.set_xlabel(r"x$_1$", fontsize=14)
     #ax.set_ylabel(r"x$_2$", fontsize=14)
 
     ax.tick_params(which="both", direction="inout", bottom=True, left=True, labelsize=14, pad=5, length=4, width=1)
     ax.tick_params(which="major", length=6)
-    ax.set_xticks([-rmax+5, 0, rmax-5])
-    ax.set_yticks([-rmax+5, 0, rmax-5])
+    ax.set_xticks([-int(rmax-5), 0, int(rmax-5)])
+    ax.set_yticks([-int(rmax-5), 0, int(rmax-5)])
     ax.set_aspect('equal', adjustable='box')
     ax.minorticks_on()
     return ax
@@ -270,11 +270,14 @@ def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data,
     scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
     scores["WD test"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Avg UE"] = [test_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
-    scores["Std UE"] = [test_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
+    scores["Err UE down"] = [np.percentile(test_dfs[i][error_key][0:n_max], 5) for i in range(n_plots)]
+    scores["Err UE up"] = [np.percentile(test_dfs[i][error_key][0:n_max], 95) for i in range(n_plots)]
     scores["Avg UE OOD"] = [large_r_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
-    scores["Std UE OOD"] = [large_r_dfs[i][error_key][0:n_max].std() for i in range(n_plots)]
+    scores["Err UE OOD down"] = [np.percentile(large_r_dfs[i][error_key][0:n_max], 5) for i in range(n_plots)]
+    scores["Err UE OOD up"] = [np.percentile(large_r_dfs[i][error_key][0:n_max], 95) for i in range(n_plots)]
     scores["Avg Q OOD"] = [large_r_dfs[i][prob_key][0:n_max].mean() for i in range(n_plots)]
-    scores["Std Q OOD"] = [large_r_dfs[i][prob_key][0:n_max].std() for i in range(n_plots)]
+    scores["Err Q OOD down"] = [np.percentile(large_r_dfs[i][prob_key][0:n_max], 5) for i in range(n_plots)]
+    scores["Err Q OOD up"] = [np.percentile(large_r_dfs[i][prob_key][0:n_max], 95) for i in range(n_plots)]
     scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]

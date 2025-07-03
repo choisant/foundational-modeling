@@ -9,18 +9,22 @@
 ## Array of jobs
 #PBS -t 1-2
 
+#nlist=(250 500 1000 2000 3000 5000 10000)
 nlist=(250 1000)
+#nlist=(10000)
+#nchainlist=(10 10 10 10 10 10 5)
+nchainlist=(10 10)
 
 script="experiments/gamma_n_dims/inferno/inferno.R"
 metadata="experiments/gamma_n_dims/inferno/metadata_x1_x2.csv"
 
-nchains=10
+nchains=${nchainlist[${PBS_ARRAYID}-1]}
 ncores=10
 ndata=${nlist[${PBS_ARRAYID}-1]}
 nsamples=1200
 
-#tag="k_2_d2_shapes[2,4]_scales[3,3]_pc[0.5,0.5]" #B
-tag="k_2_d2_shapes[2,6]_scales[5,3]_pc[0.5,0.5]" #A
+tag="k_2_d2_shapes[2,4]_scales[3,3]_pc[0.5,0.5]" #B
+#tag="k_2_d2_shapes[2,6]_scales[5,3]_pc[0.5,0.5]" #A
 #tag="k_2_d2_shapes[6,6]_scales[3,3]_pc[0.5,0.5]" #C
 runLearn=TRUE #R variable TRUE FALSE
 trainfile="experiments/gamma_n_dims/data/train_n_50000_${tag}.csv"
