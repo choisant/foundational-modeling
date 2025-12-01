@@ -37,6 +37,7 @@ parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape fa
 parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
 parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
 parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('--activation', default='relu', help="Activation function. See SequentialNet.py for options.")
 parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
 args = parser.parse_args()
 
@@ -52,6 +53,7 @@ print(f"Using {device} device {torch.cuda.get_device_name(1)}")
 
 # Machine learning option
 ALGORITHM_NAME = "evidential"
+ACTIVATION = args.activation
 VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
@@ -180,7 +182,7 @@ if VARY_HYPERPARAMS == False:
             n_train = n_data[i]
             batchsize = bs_list[i]
 
-            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
+            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation=ACTIVATION, in_channels=2, out_channels=2).to(device)
 
             optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
             train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
@@ -227,9 +229,9 @@ if VARY_HYPERPARAMS == False:
                 large_grid_dfs[i]["Beliefs"] = beliefs_large_grid[:,1]
 
                 # Save best prediction
-                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
 
 
 else:
@@ -265,7 +267,7 @@ else:
                 annealing_coef = df_run["annealing_coef"].values[i]
                 
                 # Initialize model and optimizer
-                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
+                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation=ACTIVATION, in_channels=2, out_channels=2).to(device)
                 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
                 
                 # Train model
@@ -334,7 +336,7 @@ else:
                         os.mkdir(f"gridsearch/{trainfile}")
                     if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
                         os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_{ACTIVATION}_ntrain_{n_train}.csv")
                     i = i + 1
                 else:
                     print("WTF is going on here?? Skipping these")

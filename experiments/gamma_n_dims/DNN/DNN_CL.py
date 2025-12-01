@@ -38,6 +38,7 @@ parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape fa
 parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
 parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
 parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('--activation', required=False, default="relu", help="Activation function. See SequentialNet.py for options.")
 parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
 args = parser.parse_args()
 
@@ -53,6 +54,7 @@ print(f"Using {device} device {torch.cuda.get_device_name(1)}")
 
 # Machine learning option
 ALGORITHM_NAME = "CL"
+ACTIVATION = args.activation
 VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
 x1_key = "x1"
 x2_key = "x2"
@@ -178,7 +180,7 @@ def train_ensemble(n_ensemble:int, n_train:int, batchsize:int, n_nodes:int, n_la
         train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
 
         # Create new model
-        model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2).to(device)
+        model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation=ACTIVATION, in_channels=2, out_channels=2).to(device)
         optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         
         # Train model
@@ -283,9 +285,9 @@ if VARY_HYPERPARAMS == False:
                 large_grid_ensembles[i].loc[mask, "Prediction"] = 1
         
                 # Save best prediction
-                test_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-                grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-                large_grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                test_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                large_grid_ensembles[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
 
 
 else:
@@ -387,7 +389,7 @@ else:
                         os.mkdir(f"gridsearch/{trainfile}")
                     if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
                         os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_{ACTIVATION}_ntrain_{n_train}.csv")
                     i = i + 1
                 else:
                     print("WTF is going on here?? Skipping these")

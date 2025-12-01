@@ -6,9 +6,10 @@
 #PBS -q unlimited
 ## Concat output files
 #PBS -j oe
-#PBS -t 2
+#PBS -t 3
 
 gridSearch=true
+activation="relu"
 
 #Dataset A
 #shape1=2
@@ -17,55 +18,47 @@ gridSearch=true
 #scale2=3
 
 #Dataset B
-#shape1=2
-#shape2=4
-#scale1=3
-#scale2=3
-
-#Dataset C
-shape1=6
-shape2=6
+shape1=2
+shape2=4
 scale1=3
 scale2=3
 
+#Dataset C
+#shape1=6
+#shape2=6
+#scale1=3
+#scale2=3
+
 
 . /home/agrefsru/.bashrc
-cd foundational-modeling/experiments/gamma_n_dims/DNN
+cd /disk/atlas3/users/agrefsru/foundational-modeling/experiments/gamma_n_dims/DNN
 conda activate imcal
 
 if $gridSearch
 then
     if [[ ${PBS_ARRAYID} -eq 1 ]]
     then
-        python DNN_evidential.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} -g
-        #lol=0
+        python DNN_evidential.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation} -g
     elif [[ ${PBS_ARRAYID} -eq 2 ]]
     then
-        python MCD.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} -g
-        #lol=0
+        python MCD.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation} -g
     elif [[ ${PBS_ARRAYID} -eq 3 ]]
     then
-        python DNN_ensemble.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} -g
-        #lol=0
+        python DNN_ensemble.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation} -g
     else [[ ${PBS_ARRAYID} -eq 4 ]]
-        python DNN_CL.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} -g
-        #lol=1
+        python DNN_CL.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation} -g
     fi
 else
     if [[ ${PBS_ARRAYID} -eq 1 ]]
     then
-        python DNN_evidential.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2}
-        #lol=0
+        python DNN_evidential.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation}
     elif [[ ${PBS_ARRAYID} -eq 2 ]]
     then
-        python MCD.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2}
-        #lol=0
+        python MCD.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation}
     elif [[ ${PBS_ARRAYID} -eq 3 ]]
     then
-        python DNN_ensemble.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2}
-        #lol=0
+        python DNN_ensemble.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation}
     else [[ ${PBS_ARRAYID} -eq 4 ]]
-        python DNN_CL.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2}
-        #lol=1
+        python DNN_CL.py --shape1 ${shape1} --shape2 ${shape2} --scale1 ${scale1} --scale2 ${scale2} --activation ${activation}
     fi
 fi

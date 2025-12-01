@@ -38,6 +38,7 @@ parser.add_argument('--shape1', type=int, required=True, help="Integer. Shape fa
 parser.add_argument('--shape2', type=int, required=True, help="Integer. Shape factor of class 2.")
 parser.add_argument('--scale1', type=int, required=True, help="Integer. Scale factor of class 1.")
 parser.add_argument('--scale2', type=int, required=True, help="Integer. Scale factor of class 2.")
+parser.add_argument('--activation', default='relu', help="Activation function. See SequentialNet.py for options.")
 parser.add_argument('-g', '--grid', action='store_true', help="Turn on hyperparameter grid search mode. Default off.")
 args = parser.parse_args()
 print(args.grid)
@@ -77,6 +78,7 @@ def predict_MCD(model, df, test_dataset, device, n_MC:int = 100):
 # Machine learning option
 ALGORITHM_NAME = "MCD"
 VARY_HYPERPARAMS = args.grid # Increases run time substantially and does not save any predictions/models
+ACTIVATION = args.activation
 x1_key = "x1"
 x2_key = "x2"
 n_data = [250, 500, 1000, 2000, 3000, 5000, 10000]
@@ -94,13 +96,15 @@ if VARY_HYPERPARAMS == False:
     SAVE_PREDS = True
 else:
     n_runs = 20
-    n_MC = 200
+    #n_MC = 200
+    weight_decay = 0.01
     SAVE_PREDS = False #Don't save predictions for hyperparam search mode
     hyperparams = {
         "lr" : [0.01, 0.001, 0.0001],
-        "weight_decay" : [0.1, 0.01, 0.001],
+        #"weight_decay" : [0.1, 0.01, 0.001],
         "p_dropout" : [0.1, 0.3, 0.5],
-        "layers" : [1, 3, 8]
+        "layers" : [1, 3, 8],
+        "n_MC_inference" : [50, 200, 500]
     }
     n_data = [250, 1000, 5000]
     bs_list = [128, 256, 1024]
@@ -205,7 +209,7 @@ if VARY_HYPERPARAMS == False:
             n_train = n_data[i]
             batchsize = bs_list[i]
 
-            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2, p=p_dropout).to(device)
+            model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation=ACTIVATION, in_channels=2, out_channels=2, p=p_dropout).to(device)
             optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
             train_dataset = torch.utils.data.TensorDataset(X_train[0:n_train], Y_train[0:n_train])
@@ -225,10 +229,10 @@ if VARY_HYPERPARAMS == False:
                 grid_dfs[i] = predict_MCD(model, grid_dfs[i], grid_dataset, device, n_MC=n_MC)
                 large_grid_dfs[i] = predict_MCD(model, large_grid_dfs[i], large_grid_dataset, device, n_MC=n_MC)
                 # Save best predictions
-                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_ndata-{n_data[i]}.csv")
-                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_ndata-{n_data[i]}.csv")
-                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_ndata-{n_data[i]}.csv")
+                test_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/{testfile}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
+                large_grid_dfs[i].to_csv(f"predictions/{trainfile}/{ALGORITHM_NAME}/large_grid_{tag}_{ACTIVATION}_ndata-{n_data[i]}.csv")
 
 else:
     print("Starting hyperparameter search")
@@ -259,13 +263,14 @@ else:
                 
                 # Get parameters
                 lr = df_run["lr"].values[i]
-                weight_decay = df_run["weight_decay"].values[i]
+                #weight_decay = df_run["weight_decay"].values[i]
+                n_MC = int(df_run["n_MC_inference"].values[i])
                 n_layers = int(df_run["layers"].values[i])
                 n_nodes = int(df_run["nodes"].values[i])
                 p_dropout = df_run["p_dropout"].values[i]
                 
                 # Initialize model and optimizer
-                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation="relu", in_channels=2, out_channels=2, p=p_dropout).to(device)
+                model = SequentialNet(L=n_nodes, n_hidden=n_layers, activation=ACTIVATION, in_channels=2, out_channels=2, p=p_dropout).to(device)
                 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
                 
                 # Train model
@@ -326,7 +331,7 @@ else:
                         os.mkdir(f"gridsearch/{trainfile}")
                     if (not os.path.isdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}") ):
                         os.mkdir(f"gridsearch/{trainfile}/{ALGORITHM_NAME}")
-                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
+                    df_run.to_csv(f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_vary_nMC_{ACTIVATION}_ntrain_{n_train}.csv")
                     #print("Saving file ", f"gridsearch/{trainfile}/{ALGORITHM_NAME}/results_run{j}_ntrain_{n_train}.csv")
                     i = i + 1
                 else:

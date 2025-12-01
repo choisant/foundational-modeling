@@ -251,8 +251,15 @@ def cartesian_to_polar_df(df, x_key, y_key, r_key, theta_key):
 
 #### Metrics
 
-def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data, pred_key, prob_key, error_key, n_max=-1):
+def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data, pred_key, prob_key, error_key, tail_min, n_max=-1):
+    
+    #Different regions
+    medium_r_dfs = [ood_df.copy()[ood_df["r"] > 80] for ood_df in ood_dfs]
+    medium_r_dfs = [medium_r_df[medium_r_df["r"]< 120] for medium_r_df in medium_r_dfs]
     large_r_dfs = [ood_df.copy()[ood_df["r"] > 700] for ood_df in ood_dfs]
+    test_tails_dfs = [test_df.copy()[test_df["r"] > tail_min] for test_df in test_dfs]
+    truth_test_data_tails = [truth_test_data.copy()[test_df["r"] > tail_min] for test_df in test_dfs]
+    
     keys = ["N data"]
     scores = pd.DataFrame(columns=keys)
     
@@ -266,22 +273,48 @@ def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data,
     ood_dfs_extrapolate = []
     scores["N data"] = n_data
     n_plots = len(n_data)
-    scores["ACC"] = [accuracy_score(test_dfs[i]["class"][0:n_max], test_dfs[i][pred_key][0:n_max], normalize=True) for i in range(n_plots)]
-    scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
-    scores["WD test"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
+    scores["Avg Q"] = [test_dfs[i][prob_key][0:n_max].mean() for i in range(n_plots)]
+    scores["Err Q down"] = [np.min(test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
+    scores["Err Q up"] = [np.max(test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
     scores["Avg UE"] = [test_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
     scores["Err UE down"] = [np.min(test_dfs[i][error_key][0:n_max]) for i in range(n_plots)]
     scores["Err UE up"] = [np.max(test_dfs[i][error_key][0:n_max]) for i in range(n_plots)]
-    scores["Avg UE OOD"] = [large_r_dfs[i][error_key][0:n_max].mean() for i in range(n_plots)]
-    scores["Err UE OOD down"] = [np.min(large_r_dfs[i][error_key][0:n_max]) for i in range(n_plots)]
-    scores["Err UE OOD up"] = [np.max(large_r_dfs[i][error_key][0:n_max]) for i in range(n_plots)]
-    scores["Avg Q OOD"] = [large_r_dfs[i][prob_key][0:n_max].mean() for i in range(n_plots)]
-    scores["Err Q OOD down"] = [np.min(large_r_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
-    scores["Err Q OOD up"] = [np.max(large_r_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
-    scores["Mean KL-div test"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
+    scores["ACC"] = [accuracy_score(test_dfs[i]["class"][0:n_max], test_dfs[i][pred_key][0:n_max], normalize=True) for i in range(n_plots)]
+    scores["ROCAUC"] = [roc_auc_score(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(n_plots)]
+    scores["WD"] = [wasserstein_distance(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
+    scores["Mean KL-div"] = [kl_div(truth_test_data[truth_prob_key][0:n_max], test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
     scores["LogLoss"] = [log_loss(test_dfs[i]["class"][0:n_max], test_dfs[i][prob_key][0:n_max]) for i in range(len(n_data))]
     scores["Q-P dist"] = [abs(truth_test_data[truth_prob_key][0:n_max] - test_dfs[i][prob_key][0:n_max]).mean() for i in range(len(n_data))]
 
+    scores["Avg Q tails"] = [test_tails_dfs[i][prob_key].mean() for i in range(n_plots)]
+    scores["Err Q down tails"] = [np.min(test_tails_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["Err Q up tails"] = [np.max(test_tails_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["Avg UE tails"] = [test_tails_dfs[i][error_key].mean() for i in range(n_plots)]
+    scores["Err UE down tails"] = [np.min(test_tails_dfs[i][error_key]) for i in range(n_plots)]
+    scores["Err UE up tails"] = [np.max(test_tails_dfs[i][error_key]) for i in range(n_plots)]
+    scores["ACC tails"] = [accuracy_score(test_tails_dfs[i]["class"], test_tails_dfs[i][pred_key], normalize=True) for i in range(n_plots)]
+    scores["ROCAUC tails"] = [roc_auc_score(test_tails_dfs[i]["class"], test_tails_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["WD tails"] = [wasserstein_distance(truth_test_data_tails[i][truth_prob_key], test_tails_dfs[i][prob_key]) for i in range(len(n_data))]
+    scores["Mean KL-div tails"] = [kl_div(truth_test_data_tails[i][truth_prob_key], test_tails_dfs[i][prob_key]).mean() for i in range(len(n_data))]
+    scores["LogLoss tails"] = [log_loss(test_tails_dfs[i]["class"], test_tails_dfs[i][prob_key]) for i in range(len(n_data))]
+    scores["Q-P dist tails"] = [abs(truth_test_data_tails[i][truth_prob_key] - test_tails_dfs[i][prob_key]).mean() for i in range(len(n_data))]
+
+
+    scores["Avg UE OOD"] = [medium_r_dfs[i][error_key].mean() for i in range(n_plots)]
+    scores["Err UE OOD down"] = [np.min(medium_r_dfs[i][error_key]) for i in range(n_plots)]
+    scores["Err UE OOD up"] = [np.max(medium_r_dfs[i][error_key]) for i in range(n_plots)]
+    scores["Avg Q OOD"] = [medium_r_dfs[i][prob_key].mean() for i in range(n_plots)]
+    scores["Err Q OOD down"] = [np.min(medium_r_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["Err Q OOD up"] = [np.max(medium_r_dfs[i][prob_key]) for i in range(n_plots)]
+
+    scores["Avg UE OODx"] = [large_r_dfs[i][error_key].mean() for i in range(n_plots)]
+    scores["Err UE OODx down"] = [np.min(large_r_dfs[i][error_key]) for i in range(n_plots)]
+    scores["Err UE OODx up"] = [np.max(large_r_dfs[i][error_key]) for i in range(n_plots)]
+    scores["Avg Q OODx"] = [large_r_dfs[i][prob_key].mean() for i in range(n_plots)]
+    scores["Err Q OODx down"] = [np.min(large_r_dfs[i][prob_key]) for i in range(n_plots)]
+    scores["Err Q OODx up"] = [np.max(large_r_dfs[i][prob_key]) for i in range(n_plots)]
+
+    
     ece = np.zeros(len(n_data))
     mce = np.zeros(len(n_data))
     rmsce = np.zeros(len(n_data))
@@ -299,4 +332,22 @@ def calculate_metrics(test_dfs:list, ood_dfs:list, n_data:list, truth_test_data,
     scores["ECE"] = ece
     scores["MCE"] = mce
     scores["RMSCE"] = rmsce
+
+    ece_tails = np.zeros(len(n_data))
+    mce_tails = np.zeros(len(n_data))
+    rmsce_tails = np.zeros(len(n_data))
+
+    for i in range(len(n_data)):
+        preds = torch.Tensor(test_tails_dfs[i][prob_key].values)
+        target = torch.Tensor(test_tails_dfs[i]["class"].values)
+        bce_l1_tails = BinaryCalibrationError(n_bins=15, norm='l1')
+        ece_tails[i] = bce_l1_tails(preds, target).item()
+        bce_l2_tails = BinaryCalibrationError(n_bins=15, norm='l2')
+        rmsce_tails[i] = bce_l2_tails(preds, target).item()
+        bce_max_tails = BinaryCalibrationError(n_bins=15, norm='max')
+        mce_tails[i] = bce_max_tails(preds, target).item()
+
+    scores["ECE tails"] = ece_tails
+    scores["MCE tails"] = mce_tails
+    scores["RMSCE tails"] = rmsce_tails
     return scores
