@@ -8,8 +8,8 @@
 #PBS -j oe
 #PBS -t 3
 
-gridSearch=true
-activation="relu"
+gridSearch=false
+activation="tanh"
 
 #Dataset A
 #shape1=2
